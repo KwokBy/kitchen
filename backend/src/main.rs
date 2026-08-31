@@ -2,11 +2,13 @@ use std::{env, net::SocketAddr, sync::Arc};
 
 use axum::{
     Json, Router,
-    extract::{FromRequestParts, State, rejection::JsonRejection},
-    http::{StatusCode, request::Parts},
+    body::Body,
+    extract::{FromRequestParts, Path, State, rejection::JsonRejection},
+    http::{StatusCode, header, request::Parts},
     response::{IntoResponse, Response},
-    routing::{get, post},
+    routing::{get, post, put},
 };
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
@@ -138,6 +140,32 @@ struct KitchenView {
     invite_code: String,
     role: String,
     member_count: i64,
+    members: Vec<MemberView>,
+}
+
+#[derive(FromRow)]
+struct MemberRow {
+    user_id: Uuid,
+    role: String,
+    nickname: String,
+    has_avatar: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MemberView {
+    user_id: Uuid,
+    role: String,
+    nickname: String,
+    avatar_url: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateProfileRequest {
+    nickname: String,
+    avatar_data: Option<String>,
+    avatar_content_type: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -150,14 +178,15 @@ struct OptionalKitchenResponse {
     kitchen: Option<KitchenView>,
 }
 
-impl From<KitchenRow> for KitchenView {
-    fn from(row: KitchenRow) -> Self {
+impl KitchenView {
+    fn from_row(row: KitchenRow, members: Vec<MemberView>) -> Self {
         Self {
             id: row.id,
             name: row.name,
             invite_code: row.invite_code.trim().to_owned(),
             role: row.role,
             member_count: row.member_count,
+            members,
         }
     }
 }
@@ -192,6 +221,8 @@ async fn main() {
         .route("/v1/auth/wechat", post(wechat_login))
         .route("/v1/kitchens", get(current_kitchen).post(create_kitchen))
         .route("/v1/kitchens/join", post(join_kitchen))
+        .route("/v1/users/me/profile", put(update_profile))
+        .route("/v1/users/{user_id}/avatar", get(user_avatar))
         .with_state(state);
 
     let addr: SocketAddr = env::var("LISTEN_ADDR")
@@ -319,6 +350,7 @@ async fn create_kitchen(
         .await
         .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
+    let members = load_members(&state.pool, kitchen_id).await?;
     Ok(Json(KitchenResponse {
         kitchen: KitchenView {
             id: kitchen_id,
@@ -326,6 +358,7 @@ async fn create_kitchen(
             invite_code,
             role: "owner".to_owned(),
             member_count: 1,
+            members,
         },
     }))
 }
@@ -345,9 +378,14 @@ async fn current_kitchen(
     .fetch_optional(&state.pool)
     .await
     .map_err(internal)?;
-    Ok(Json(OptionalKitchenResponse {
-        kitchen: row.map(Into::into),
-    }))
+    let kitchen = match row {
+        Some(row) => {
+            let members = load_members(&state.pool, row.id).await?;
+            Some(KitchenView::from_row(row, members))
+        }
+        None => None,
+    };
+    Ok(Json(OptionalKitchenResponse { kitchen }))
 }
 
 async fn join_kitchen(
@@ -414,9 +452,105 @@ async fn join_kitchen(
     .await
     .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
+    let members = load_members(&state.pool, kitchen_id).await?;
     Ok(Json(KitchenResponse {
-        kitchen: row.into(),
+        kitchen: KitchenView::from_row(row, members),
     }))
+}
+
+async fn load_members(pool: &PgPool, kitchen_id: Uuid) -> Result<Vec<MemberView>, ApiError> {
+    let rows = sqlx::query_as::<_, MemberRow>(
+        "SELECT km.user_id, km.role, u.nickname, u.avatar IS NOT NULL AS has_avatar \
+         FROM kitchen_members km JOIN users u ON u.id = km.user_id \
+         WHERE km.kitchen_id = $1 \
+         ORDER BY CASE km.role WHEN 'owner' THEN 0 ELSE 1 END, km.joined_at",
+    )
+    .bind(kitchen_id)
+    .fetch_all(pool)
+    .await
+    .map_err(internal)?;
+    Ok(rows
+        .into_iter()
+        .map(|row| MemberView {
+            user_id: row.user_id,
+            role: row.role,
+            nickname: row.nickname,
+            avatar_url: if row.has_avatar {
+                format!("/v1/users/{}/avatar", row.user_id)
+            } else {
+                String::new()
+            },
+        })
+        .collect())
+}
+
+async fn update_profile(
+    State(state): State<AppState>,
+    AuthenticatedUser(user_id): AuthenticatedUser,
+    body: Result<Json<UpdateProfileRequest>, JsonRejection>,
+) -> Result<StatusCode, ApiError> {
+    let Json(body) = body.map_err(invalid_json)?;
+    let nickname = body.nickname.trim();
+    if nickname.is_empty() || nickname.chars().count() > 40 {
+        return Err(ApiError::BadRequest(
+            "微信昵称需要是 1 到 40 个字".to_owned(),
+        ));
+    }
+    let avatar = match body.avatar_data {
+        Some(value) => {
+            let decoded = BASE64
+                .decode(value)
+                .map_err(|_| ApiError::BadRequest("头像数据格式无效".to_owned()))?;
+            if decoded.len() > 2 * 1024 * 1024 {
+                return Err(ApiError::BadRequest("头像不能超过 2MB".to_owned()));
+            }
+            Some(decoded)
+        }
+        None => None,
+    };
+    let content_type = body
+        .avatar_content_type
+        .unwrap_or_else(|| "image/jpeg".to_owned());
+    if !matches!(
+        content_type.as_str(),
+        "image/jpeg" | "image/png" | "image/webp"
+    ) {
+        return Err(ApiError::BadRequest("头像图片格式不支持".to_owned()));
+    }
+    sqlx::query(
+        "UPDATE users SET nickname = $2, \
+         avatar = COALESCE($3, avatar), \
+         avatar_content_type = CASE WHEN $3 IS NULL THEN avatar_content_type ELSE $4 END \
+         WHERE id = $1",
+    )
+    .bind(user_id)
+    .bind(nickname)
+    .bind(avatar)
+    .bind(content_type)
+    .execute(&state.pool)
+    .await
+    .map_err(internal)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+async fn user_avatar(
+    State(state): State<AppState>,
+    Path(user_id): Path<Uuid>,
+) -> Result<Response, ApiError> {
+    let row = sqlx::query_as::<_, (Vec<u8>, String)>(
+        "SELECT avatar, avatar_content_type FROM users WHERE id = $1 AND avatar IS NOT NULL",
+    )
+    .bind(user_id)
+    .fetch_optional(&state.pool)
+    .await
+    .map_err(internal)?
+    .ok_or_else(|| ApiError::NotFound("头像不存在".to_owned()))?;
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, row.1)
+        .header(header::CACHE_CONTROL, "public, max-age=300")
+        .body(Body::from(row.0))
+        .map_err(internal)
 }
 
 fn invalid_json(_: JsonRejection) -> ApiError {

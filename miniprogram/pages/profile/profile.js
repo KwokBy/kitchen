@@ -2,16 +2,45 @@ const { loadState, updateState } = require('../../services/store');
 const kitchenService = require('../../services/kitchen');
 
 Page({
-  data: { state: {}, meInitial: '我', partnerInitial: '她', activeTab: 'kitchen', showCreate: false, joinCode: '', showWechatProfile: false, draftAvatarUrl: '', draftNickname: '' },
+  data: { state: {}, members: [], activeTab: 'kitchen', showCreate: false, joinCode: '', showWechatProfile: false, draftAvatarUrl: '', draftNickname: '' },
   onLoad(options) { if (options.invite) this.setData({ joinCode: options.invite.toUpperCase(), activeTab: 'kitchen' }); },
-  onShow() { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 3 }); this.refresh(); },
+  onShow() {
+    if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 3 });
+    this.refresh();
+    this.syncKitchen();
+  },
   refresh() {
     const state = loadState();
-    this.setData({
-      state,
-      meInitial: state.profile.meName.charAt(0) || '我',
-      partnerInitial: state.profile.partnerName.charAt(0) || '她'
+    const kitchen = state.kitchen;
+    let source = kitchen && kitchen.members ? kitchen.members : [];
+    if (kitchen && !source.length) {
+      const self = { userId: state.identity.openid, role: kitchen.role, nickname: state.identity.nickname || state.profile.meName, avatarUrl: state.identity.avatarUrl };
+      source = kitchen.role === 'owner' ? [self] : [{ userId: 'owner', role: 'owner', nickname: '厨房主人', avatarUrl: '' }, self];
+      if (kitchen.role === 'owner' && kitchen.memberCount >= 2) source.push({ userId: 'member', role: 'member', nickname: state.profile.partnerName, avatarUrl: '' });
+    }
+    const members = source.map(member => {
+      const isMe = member.userId === state.identity.openid;
+      const nickname = member.nickname || (isMe ? state.identity.nickname || state.profile.meName : member.role === 'owner' ? '厨房主人' : '受邀成员');
+      return {
+        ...member,
+        isMe,
+        nickname,
+        avatarUrl: member.avatarUrl || (isMe && state.identity.profileComplete ? state.identity.avatarUrl : ''),
+        initial: nickname.charAt(0) || (member.role === 'owner' ? '主' : '伴'),
+        roleText: member.role === 'owner' ? '做饭主力' : '点菜主力'
+      };
     });
+    this.setData({ state, members });
+  },
+  async syncKitchen() {
+    if (!this.data.state.identity || !this.data.state.identity.bound) return;
+    try {
+      await kitchenService.syncMyProfile();
+      await kitchenService.refreshKitchen();
+      this.refresh();
+    } catch (error) {
+      console.warn('厨房成员同步失败', error);
+    }
   },
   setTabHidden(hidden) { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ hidden }); },
   switchProfileTab(event) { this.setData({ activeTab: event.currentTarget.dataset.tab, showCreate: false }); },
@@ -39,14 +68,24 @@ Page({
   noop() {},
   onChooseAvatar(event) {
     const tempFilePath = event.detail.avatarUrl;
-    wx.saveFile({
-      tempFilePath,
-      success: result => this.setData({ draftAvatarUrl: result.savedFilePath }),
-      fail: () => this.setData({ draftAvatarUrl: tempFilePath })
+    wx.compressImage({
+      src: tempFilePath,
+      quality: 76,
+      compressedWidth: 512,
+      success: compressed => wx.saveFile({
+        tempFilePath: compressed.tempFilePath,
+        success: result => this.setData({ draftAvatarUrl: result.savedFilePath }),
+        fail: () => this.setData({ draftAvatarUrl: compressed.tempFilePath })
+      }),
+      fail: () => wx.saveFile({
+        tempFilePath,
+        success: result => this.setData({ draftAvatarUrl: result.savedFilePath }),
+        fail: () => this.setData({ draftAvatarUrl: tempFilePath })
+      })
     });
   },
   onNicknameInput(event) { this.setData({ draftNickname: event.detail.value }); },
-  saveWechatProfile() {
+  async saveWechatProfile() {
     const nickname = this.data.draftNickname.trim();
     if (!this.data.draftAvatarUrl) return wx.showToast({ title: '请选择微信头像', icon: 'none' });
     if (!nickname) return wx.showToast({ title: '请选择微信昵称', icon: 'none' });
@@ -59,7 +98,14 @@ Page({
     this.setTabHidden(false);
     this.setData({ showWechatProfile: false });
     this.refresh();
-    wx.showToast({ title: '微信资料已保存', icon: 'success' });
+    try {
+      await kitchenService.syncMyProfile();
+      await kitchenService.refreshKitchen();
+      this.refresh();
+      wx.showToast({ title: '微信资料已同步', icon: 'success' });
+    } catch (error) {
+      wx.showToast({ title: '资料已保存，稍后自动同步', icon: 'none' });
+    }
   },
   toggleCreate() {
     if (!this.data.state.identity.bound) return wx.showToast({ title: '请先微信登录', icon: 'none' });
