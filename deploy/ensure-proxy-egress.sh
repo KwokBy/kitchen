@@ -16,5 +16,6 @@ ensure_rule() {
 }
 
 ensure_rule nat POSTROUTING -s "$subnet" ! -o "$bridge" -m comment --comment "$comment" -j MASQUERADE
+ensure_rule filter FORWARD -i "$bridge" -o "$bridge" -m comment --comment "$comment" -j ACCEPT
 ensure_rule filter FORWARD -i "$bridge" ! -o "$bridge" -m comment --comment "$comment" -j ACCEPT
 ensure_rule filter FORWARD -o "$bridge" -m conntrack --ctstate RELATED,ESTABLISHED -m comment --comment "$comment" -j ACCEPT
