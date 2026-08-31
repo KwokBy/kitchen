@@ -2,7 +2,7 @@
   <text class="eyebrow">{{dateText}}</text>
   <view class="brand-row">
     <view><text class="brand-title">熹贵妃的小厨房</text><text class="brand-copy">两个人，好好吃饭</text></view>
-    <image class="brand-illustration" src="/assets/kitchen-pals.png" mode="aspectFit" />
+    <image class="brand-illustration" src="/assets/kitchen-pals.jpg" mode="aspectFit" />
   </view>
 
   <view class="section-head"><text>今日菜单</text><text wx:if="{{dishes.length > 1}}">{{dishes.length}} 道 · 左右滑动</text><text wx:else>{{dishes.length ? '已经有主意了' : '还没安排'}}</text></view>
