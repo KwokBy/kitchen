@@ -39,7 +39,11 @@
     <input class="text-input" name="note" value="{{note}}" placeholder="例如：少辣，多一点汁" />
 
     <text class="field-label">需要哪些食材</text>
-    <textarea class="text-area" name="ingredients" value="{{ingredientsText}}" placeholder="每行一种，例如：&#10;番茄 3个&#10;鸡蛋 4个" />
+    <textarea class="text-area" name="ingredients" value="{{ingredientsText}}" bindinput="onIngredientsInput" placeholder="每行一种，例如：&#10;番茄 3个&#10;鸡蛋 4个" />
+    <view wx:if="{{ingredientChecks.length}}" class="ingredient-checks">
+      <view class="ingredient-check {{item.tone}}" wx:for="{{ingredientChecks}}" wx:key="name"><view><strong>{{item.name}} · {{item.needText}}</strong><small>冰箱 {{item.stockText}}</small></view><text>{{item.missingText}}</text></view>
+      <small class="ingredient-tip">保存并安排进菜单后，会自动汇总到冰箱的菜篮子。</small>
+    </view>
 
     <button class="primary-button save-button" form-type="submit">保存这道菜</button>
   </form>

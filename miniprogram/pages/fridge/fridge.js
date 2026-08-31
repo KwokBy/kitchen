@@ -1,5 +1,6 @@
 const { loadState, updateState } = require('../../services/store');
 const { formatDate, addDays, dateChoices } = require('../../utils/date');
+const { buildBasket } = require('../../utils/ingredients');
 
 function status(expiryDate) {
   const today = new Date(`${formatDate(new Date())}T00:00:00`);
@@ -18,23 +19,10 @@ Page({
     const items = state.inventory.map(item => ({ ...item, status: status(item.expiryDate) })).sort((a, b) => a.expiryDate.localeCompare(b.expiryDate));
     const attentionCount = items.filter(item => item.status.tone === 'soon' || item.status.tone === 'expired').length;
     const plannedDates = new Set(dateChoices().map(item => item.value));
-    const availableNames = new Set(items.filter(item => item.status.tone !== 'expired').map(item => item.name));
-    const groups = {};
-    state.dishes.filter(dish => plannedDates.has(dish.planDate)).forEach(dish => {
-      dish.ingredients.forEach(requirement => {
-        const name = requirement.split(/\s+/)[0];
-        if (!groups[name]) groups[name] = { name, requirements: [], dishNames: [] };
-        groups[name].requirements.push(requirement.replace(name, '').trim() || '适量');
-        groups[name].dishNames.push(dish.name);
-      });
-    });
-    const basketItems = Object.values(groups).map(item => ({
-      ...item,
-      needText: item.requirements.join(' + '),
-      dishText: item.dishNames.join('、'),
-      inFridge: availableNames.has(item.name)
-    })).sort((a, b) => Number(a.inFridge) - Number(b.inFridge));
-    const missingCount = basketItems.filter(item => !item.inFridge).length;
+    const activeInventory = items.filter(item => item.status.tone !== 'expired');
+    const plannedDishes = state.dishes.filter(dish => plannedDates.has(dish.planDate));
+    const basketItems = buildBasket(plannedDishes, activeInventory);
+    const missingCount = basketItems.filter(item => item.tone !== 'enough').length;
     this.setData({ items, basketItems, missingCount, attentionCount, defaultExpiry: formatDate(addDays(new Date(), 3)) });
   },
   openEditor() { this.setData({ showEditor: true }); },

@@ -1,6 +1,7 @@
 Component({
   data: {
     selected: 0,
+    hidden: false,
     items: [
       { path: '/pages/today/today', text: '首页', icon: '/assets/tabbar/today.png', activeIcon: '/assets/tabbar/today-active.png' },
       { path: '/pages/fridge/fridge', text: '冰箱', icon: '/assets/tabbar/fridge.png', activeIcon: '/assets/tabbar/fridge-active.png' },

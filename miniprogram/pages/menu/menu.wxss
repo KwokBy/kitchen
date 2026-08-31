@@ -42,6 +42,15 @@
 .basket-entry strong { font-family: STKaiti, KaiTi, serif; font-size: 28rpx; }
 .basket-entry small { margin-top: 6rpx; color: rgba(255,255,255,.65); font-size: 19rpx; }
 .basket-entry > text { font-size: 42rpx; font-weight: 300; }
+.add-choice-sheet { padding-bottom: calc(34rpx + env(safe-area-inset-bottom)); }
+.add-choice { display: grid; grid-template-columns: 78rpx 1fr auto; align-items: center; gap: 18rpx; margin-top: 18rpx; padding: 22rpx; border: 2rpx solid rgba(120,144,124,.2); border-radius: 30rpx; background: rgba(120,144,124,.1); }
+.add-choice.new { border-color: rgba(216,93,63,.18); background: rgba(216,93,63,.07); }
+.choice-mark { display: flex; align-items: center; justify-content: center; width: 72rpx; height: 72rpx; border-radius: 50%; color: #f7f1df; background: #496655; font-family: STKaiti, KaiTi, serif; font-size: 28rpx; }
+.add-choice.new .choice-mark { background: #d85d3f; }
+.add-choice strong, .add-choice small { display: block; }
+.add-choice strong { font-family: STKaiti, KaiTi, serif; font-size: 27rpx; }
+.add-choice small { margin-top: 6rpx; color: #607263; font-size: 19rpx; }
+.add-choice > text { color: #607263; font-size: 42rpx; }
 .sheet-dish { display: flex; align-items: center; padding: 20rpx; border-radius: 28rpx; background: rgba(255,255,255,.55); }
 .sheet-dish-image { flex: 0 0 104rpx; width: 104rpx; height: 104rpx; margin-right: 22rpx; }
 .sheet-dish strong, .sheet-dish small { display: block; }

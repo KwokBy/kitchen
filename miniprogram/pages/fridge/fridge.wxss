@@ -19,9 +19,13 @@
 .basket-row { display: grid; grid-template-columns: 64rpx 1fr auto; align-items: center; gap: 14rpx; padding: 20rpx 0; border-bottom: 1rpx solid rgba(53,70,55,.1); }
 .basket-row:last-child { border-bottom: 0; }
 .basket-check { display: flex; align-items: center; justify-content: center; width: 58rpx; height: 58rpx; border-radius: 50%; color: #fff; background: #d85d3f; font-size: 20rpx; }
-.basket-check.done { background: #78907c; }
+.basket-check.enough { background: #78907c; }
+.basket-check.partial { background: #c9974b; }
+.basket-check.missing { background: #d85d3f; }
 .basket-row strong, .basket-row small { display: block; }
 .basket-row strong { font-size: 24rpx; }
 .basket-row small { margin-top: 6rpx; color: #607263; font-size: 19rpx; }
 .basket-row > text { color: #607263; font-size: 19rpx; }
+.basket-status.partial { color: #9a6a25; }
+.basket-status.missing { color: #c74f35; }
 .basket-empty { padding: 38rpx 26rpx; color: #607263; font-size: 22rpx; line-height: 1.6; text-align: center; }

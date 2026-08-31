@@ -8,7 +8,7 @@
 
   <view class="section-head"><text>本周菜篮子</text><text>{{missingCount}} 种待采购</text></view>
   <view wx:if="{{basketItems.length}}" class="basket-card paper-card">
-    <view class="basket-row" wx:for="{{basketItems}}" wx:key="name"><view class="basket-check {{item.inFridge ? 'done' : ''}}">{{item.inFridge ? '✓' : '买'}}</view><view><strong>{{item.name}} · {{item.needText}}</strong><small>用于 {{item.dishText}}</small></view><text>{{item.inFridge ? '冰箱已有' : '还要准备'}}</text></view>
+    <view class="basket-row" wx:for="{{basketItems}}" wx:key="name"><view class="basket-check {{item.tone}}">{{item.tone === 'enough' ? '✓' : item.tone === 'partial' ? '补' : '买'}}</view><view class="basket-copy"><strong>{{item.name}} · 需要 {{item.needText}}</strong><small>冰箱 {{item.stockText}} · 用于 {{item.dishText}}</small></view><text class="basket-status {{item.tone}}">{{item.missingText}}</text></view>
   </view>
   <view wx:else class="basket-empty paper-card">先去菜单把想吃的菜安排到这几天，食材会自动汇总到这里。</view>
 </view>

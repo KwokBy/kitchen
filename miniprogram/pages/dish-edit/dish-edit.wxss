@@ -24,3 +24,13 @@
 .date-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 20rpx; }
 .date-row > text { color: #d85d3f; font-size: 22rpx; }
 .save-button { margin-top: 38rpx; }
+.ingredient-checks { margin-top: 14rpx; padding: 8rpx 22rpx; border-radius: 28rpx; background: rgba(255,255,255,.48); }
+.ingredient-check { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; padding: 18rpx 0; border-bottom: 1rpx solid rgba(53,70,55,.1); }
+.ingredient-check strong, .ingredient-check small { display: block; }
+.ingredient-check strong { font-size: 23rpx; }
+.ingredient-check small { margin-top: 5rpx; color: #607263; font-size: 19rpx; }
+.ingredient-check > text { flex-shrink: 0; font-size: 20rpx; }
+.ingredient-check.enough > text { color: #68806d; }
+.ingredient-check.partial > text { color: #9a6a25; }
+.ingredient-check.missing > text { color: #c74f35; }
+.ingredient-tip { display: block; padding: 16rpx 0 18rpx; color: #607263; font-size: 19rpx; line-height: 1.5; }

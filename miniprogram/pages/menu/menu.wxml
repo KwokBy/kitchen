@@ -19,6 +19,14 @@
   <button class="basket-entry" bindtap="openBasket"><view><strong>{{plannedCount ? '已安排 ' + plannedCount + ' 道菜' : '先安排菜单，再准备食材'}}</strong><small>{{plannedCount ? '去菜篮子对照冰箱库存' : '菜篮会自动汇总用料'}}</small></view><text>›</text></button>
 </view>
 
+<view wx:if="{{showAddChoice}}" class="sheet-overlay" bindtap="closeSheets">
+  <view class="bottom-sheet add-choice-sheet" catchtap="noop">
+    <view class="sheet-head"><view><text>{{addChoiceDate ? '添加到当天' : '菜单收菜'}}</text><strong>想怎么加这道菜</strong></view><button class="sheet-close" bindtap="closeSheets">×</button></view>
+    <view class="add-choice" bindtap="chooseExistingDish"><view class="choice-mark">菜</view><view><strong>从已有的菜添加</strong><small>去菜本里挑一道，直接安排进菜单</small></view><text>›</text></view>
+    <view class="add-choice new" bindtap="createNewDish"><view class="choice-mark">＋</view><view><strong>新建一道菜</strong><small>添加照片、食材和做菜备注</small></view><text>›</text></view>
+  </view>
+</view>
+
 <view wx:if="{{showArrange}}" class="sheet-overlay" bindtap="closeSheets">
   <view class="bottom-sheet arrange-sheet" catchtap="noop">
     <view class="sheet-head"><view><text>安排菜品</text><strong>哪天吃这道菜</strong></view><button class="sheet-close" bindtap="closeSheets">×</button></view>

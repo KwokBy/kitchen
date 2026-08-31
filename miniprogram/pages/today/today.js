@@ -28,7 +28,10 @@ Page({
     wx.switchTab({ url: '/pages/menu/menu' });
   },
   goHistory() { wx.pageScrollTo({ selector: '#meal-history', duration: 280 }); },
-  addTomorrowDish() { wx.navigateTo({ url: `/pages/dish-edit/dish-edit?planDate=${this.data.tomorrowDate}` }); },
+  addTomorrowDish() {
+    getApp().globalData.openAddChoiceDate = this.data.tomorrowDate;
+    wx.switchTab({ url: '/pages/menu/menu' });
+  },
   surpriseTomorrow() {
     const state = loadState();
     const candidates = state.dishes.filter(dish => !dish.planDate);

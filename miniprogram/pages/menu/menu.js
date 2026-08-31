@@ -15,14 +15,20 @@ Page({
     plannedCount: 0, showArrange: false, arrangeDate: '', showPicker: false,
     pickerMode: 'all', pickerDishes: [], pickerIndex: 0, pickerDish: null,
     pickerDate: '', showDay: false, activeDay: { label: '', value: '', dishes: [] },
-    tableMotion: '', plateMotion: ''
+    tableMotion: '', plateMotion: '', showAddChoice: false, addChoiceDate: ''
   },
   onShow() {
-    if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 2 });
+    if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 2, hidden: false });
     this.refresh();
     if (getApp().globalData.openWishPicker) {
       getApp().globalData.openWishPicker = false;
       this.openPicker();
+    }
+    if (getApp().globalData.openAddChoiceDate) {
+      const addChoiceDate = getApp().globalData.openAddChoiceDate;
+      getApp().globalData.openAddChoiceDate = '';
+      this.setTabHidden(true);
+      this.setData({ showAddChoice: true, addChoiceDate });
     }
   },
   refresh() {
@@ -51,10 +57,22 @@ Page({
     });
   },
   onUnload() { clearTimeout(this.menuMotionTimer); },
-  addDish() { wx.navigateTo({ url: '/pages/dish-edit/dish-edit' }); },
+  setTabHidden(hidden) { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ hidden }); },
+  addDish() { this.setTabHidden(true); this.setData({ showAddChoice: true, addChoiceDate: '' }); },
+  chooseExistingDish() {
+    const pickerDate = this.data.addChoiceDate || (this.data.dateOptions[0] && this.data.dateOptions[0].value) || '';
+    this.setData({ showAddChoice: false, showPicker: true, pickerDate });
+    this.updatePicker('all');
+  },
+  createNewDish() {
+    const planDate = this.data.addChoiceDate;
+    this.closeSheets();
+    wx.navigateTo({ url: `/pages/dish-edit/dish-edit${planDate ? `?planDate=${planDate}` : ''}` });
+  },
   editDish() { if (this.data.selectedDish) wx.navigateTo({ url: `/pages/dish-edit/dish-edit?id=${this.data.selectedDish.id}` }); },
   arrangeDish() {
     if (!this.data.selectedDish) return;
+    this.setTabHidden(true);
     this.setData({ showArrange: true, arrangeDate: this.data.selectedDish.planDate || this.data.dateOptions[0].value });
   },
   chooseArrangeDate(event) { this.setData({ arrangeDate: event.currentTarget.dataset.date }); },
@@ -66,6 +84,7 @@ Page({
   },
   openPicker() {
     const pickerDate = this.data.dateOptions[0] ? this.data.dateOptions[0].value : '';
+    this.setTabHidden(true);
     this.setData({ showPicker: true, pickerDate }); this.updatePicker('all');
   },
   changePickerMode(event) { this.updatePicker(event.currentTarget.dataset.mode); },
@@ -86,7 +105,7 @@ Page({
     const name = this.data.pickerDish.name;
     this.closeSheets(); this.refresh(); wx.showToast({ title: `${name}已安排`, icon: 'success' });
   },
-  openDay(event) { this.setData({ showDay: true, activeDay: this.data.weekDays.find(item => item.value === event.currentTarget.dataset.date) }); },
+  openDay(event) { this.setTabHidden(true); this.setData({ showDay: true, activeDay: this.data.weekDays.find(item => item.value === event.currentTarget.dataset.date) }); },
   editDayDish(event) { this.closeSheets(); wx.navigateTo({ url: `/pages/dish-edit/dish-edit?id=${event.currentTarget.dataset.id}` }); },
   unscheduleDish(event) {
     const dishId = event.currentTarget.dataset.id;
@@ -94,9 +113,9 @@ Page({
     this.setData({ activeDay: { ...this.data.activeDay, dishes: this.data.activeDay.dishes.filter(item => item.id !== dishId) } });
     this.refresh();
   },
-  addDishToDay() { const date = this.data.activeDay.value; this.closeSheets(); wx.navigateTo({ url: `/pages/dish-edit/dish-edit?planDate=${date}` }); },
+  addDishToDay() { const date = this.data.activeDay.value; this.closeSheets(); this.setTabHidden(true); this.setData({ showAddChoice: true, addChoiceDate: date }); },
   openBasket() { wx.switchTab({ url: '/pages/fridge/fridge' }); },
-  closeSheets() { this.setData({ showArrange: false, showPicker: false, showDay: false }); },
+  closeSheets() { this.setTabHidden(false); this.setData({ showArrange: false, showPicker: false, showDay: false, showAddChoice: false }); },
   noop() {},
   removeDish() {
     if (!this.data.selectedDish) return;

@@ -1,5 +1,6 @@
 const { loadState, updateState } = require('../../services/store');
 const { formatDate } = require('../../utils/date');
+const { compareIngredients } = require('../../utils/ingredients');
 
 Page({
   data: {
@@ -22,7 +23,9 @@ Page({
     today: '',
     planDate: '',
     note: '',
-    ingredientsText: ''
+    ingredientsText: '',
+    ingredientChecks: [],
+    inventory: []
   },
   onLoad(options) {
     const state = loadState();
@@ -42,8 +45,10 @@ Page({
       today: formatDate(new Date()),
       planDate: dish ? dish.planDate : (options.planDate || ''),
       note: dish ? dish.note : '',
-      ingredientsText: dish ? dish.ingredients.join('\n') : ''
+      ingredientsText: dish ? dish.ingredients.join('\n') : '',
+      inventory: state.inventory || []
     });
+    this.refreshIngredientChecks(this.data.ingredientsText);
     wx.setNavigationBarTitle({ title: this.data.title });
   },
   onCategoryChange(event) { this.setData({ categoryIndex: Number(event.detail.value) }); },
@@ -57,6 +62,15 @@ Page({
     this.setData({ wantedBy, meWanted: wantedBy.includes('me'), partnerWanted: wantedBy.includes('partner') });
   },
   selectPlate(event) { this.setData({ plate: event.currentTarget.dataset.plate }); },
+  onIngredientsInput(event) {
+    const ingredientsText = event.detail.value;
+    this.setData({ ingredientsText });
+    this.refreshIngredientChecks(ingredientsText);
+  },
+  refreshIngredientChecks(text) {
+    const lines = String(text || '').split('\n').map(item => item.trim()).filter(Boolean);
+    this.setData({ ingredientChecks: compareIngredients(lines, this.data.inventory) });
+  },
   chooseImage(event) {
     const source = event.currentTarget.dataset.source;
     wx.chooseMedia({
