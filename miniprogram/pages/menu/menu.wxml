@@ -9,7 +9,7 @@
   </view>
   <view wx:else class="empty-menu paper-card">还没有菜，先新增第一道。</view>
 
-  <view wx:if="{{selectedDish}}" class="selected-copy"><text>{{selectedDish.name}}</text><small>♥ {{selectedDish.wishText}}{{selectedDish.planDate ? ' · 已安排' : ''}}</small><small wx:if="{{selectedDish.note}}">{{selectedDish.note}}</small><small wx:if="{{dishes.length > 1}}" class="menu-swipe-hint">↑ 上下滑动换菜 ↓</small></view>
+  <view wx:if="{{selectedDish}}" class="selected-copy"><text>{{selectedDish.name}}</text><small>♥ {{selectedDish.wishText}}{{selectedDish.planDates.length ? ' · 已安排 ' + selectedDish.planDates.length + ' 天' : ''}}</small><small wx:if="{{selectedDish.note}}">{{selectedDish.note}}</small><small wx:if="{{dishes.length > 1}}" class="menu-swipe-hint">↑ 上下滑动换菜 ↓</small></view>
   <view class="menu-actions"><button class="soft-button add" bindtap="addDish">＋ 新增</button><button class="primary-button" bindtap="arrangeDish">安排</button><button class="soft-button" bindtap="editDish">编辑</button><button class="remove-button" bindtap="removeDish">移出</button></view>
 
   <view class="section-head"><text>这几天吃什么</text><text>她也可以来安排</text></view>
@@ -30,7 +30,7 @@
 <view wx:if="{{showArrange}}" class="sheet-overlay" bindtap="closeSheets">
   <view class="bottom-sheet arrange-sheet" catchtap="noop">
     <view class="sheet-head"><view><text>安排菜品</text><strong>哪天吃这道菜</strong></view><button class="sheet-close" bindtap="closeSheets">×</button></view>
-    <view class="sheet-dish"><view class="sheet-dish-image dish-composite"><image class="plate-layer" src="{{selectedDish.plateImage}}" mode="aspectFit" /><image class="food-layer" src="{{selectedDish.image}}" mode="aspectFit" /></view><view><strong>{{selectedDish.name}}</strong><small>{{selectedDish.planDate ? '已经安排过，可以换一天' : '还没有安排日期'}}</small></view></view>
+    <view class="sheet-dish"><view class="sheet-dish-image dish-composite"><image class="plate-layer" src="{{selectedDish.plateImage}}" mode="aspectFit" /><image class="food-layer" src="{{selectedDish.image}}" mode="aspectFit" /></view><view><strong>{{selectedDish.name}}</strong><small>{{selectedDish.planDates.length ? '已安排 ' + selectedDish.planDates.length + ' 天，还可以继续加' : '还没有安排日期'}}</small></view></view>
     <view class="date-chips"><view wx:for="{{dateOptions}}" wx:key="value" class="date-chip {{arrangeDate === item.value ? 'is-active' : ''}}" data-date="{{item.value}}" bindtap="chooseArrangeDate">{{item.label}}</view></view>
     <button class="primary-button" bindtap="confirmArrange">安排进这一天</button>
   </view>

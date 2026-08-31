@@ -1,6 +1,7 @@
 const { loadState, updateState } = require('../../services/store');
 const { formatDate } = require('../../utils/date');
 const { compareIngredients } = require('../../utils/ingredients');
+const { planDatesOf } = require('../../utils/schedule');
 
 Page({
   data: {
@@ -22,6 +23,7 @@ Page({
     partnerWanted: true,
     today: '',
     planDate: '',
+    planDates: [],
     note: '',
     ingredientsText: '',
     ingredientChecks: [],
@@ -43,7 +45,8 @@ Page({
       meWanted: dish ? dish.wantedBy.includes('me') : false,
       partnerWanted: dish ? dish.wantedBy.includes('partner') : true,
       today: formatDate(new Date()),
-      planDate: dish ? dish.planDate : (options.planDate || ''),
+      planDate: options.planDate || '',
+      planDates: dish ? planDatesOf(dish) : [],
       note: dish ? dish.note : '',
       ingredientsText: dish ? dish.ingredients.join('\n') : '',
       inventory: state.inventory || []
@@ -107,7 +110,7 @@ Page({
       image: this.data.image,
       plate: this.data.plate,
       note: values.note.trim(),
-      planDate: this.data.planDate,
+      planDates: [...new Set([...this.data.planDates, this.data.planDate].filter(Boolean))].sort(),
       ingredients: values.ingredients.split('\n').map(item => item.trim()).filter(Boolean)
     };
     updateState(state => {

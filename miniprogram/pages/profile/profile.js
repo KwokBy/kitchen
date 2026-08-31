@@ -13,6 +13,7 @@ Page({
       partnerInitial: state.profile.partnerName.charAt(0) || '她'
     });
   },
+  setTabHidden(hidden) { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ hidden }); },
   switchProfileTab(event) { this.setData({ activeTab: event.currentTarget.dataset.tab, showCreate: false }); },
   handleMeProfile() { if (this.data.state.identity.bound) this.openWechatProfile(); else this.loginWechat(); },
   async loginWechat() {
@@ -26,13 +27,15 @@ Page({
   },
   openWechatProfile() {
     const identity = this.data.state.identity;
+    this.setTabHidden(true);
     this.setData({
       showWechatProfile: true,
       draftAvatarUrl: identity.avatarUrl || '',
       draftNickname: identity.profileComplete ? identity.nickname : ''
     });
   },
-  closeWechatProfile() { this.setData({ showWechatProfile: false }); },
+  closeWechatProfile() { this.setTabHidden(false); this.setData({ showWechatProfile: false }); },
+  onUnload() { this.setTabHidden(false); },
   noop() {},
   onChooseAvatar(event) {
     const tempFilePath = event.detail.avatarUrl;
@@ -53,6 +56,7 @@ Page({
       state.identity.profileComplete = true;
       state.profile.meName = nickname;
     });
+    this.setTabHidden(false);
     this.setData({ showWechatProfile: false });
     this.refresh();
     wx.showToast({ title: '微信资料已保存', icon: 'success' });

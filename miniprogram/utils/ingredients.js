@@ -96,7 +96,7 @@ function consumeInventory(inventory, dishes, options = {}) {
 function buildDailyBaskets(dishes, inventory, days) {
   let remainingInventory = inventory.map(item => ({ ...item }));
   return [...days].sort((a, b) => a.value.localeCompare(b.value)).map(day => {
-    const dayDishes = dishes.filter(dish => dish.planDate === day.value);
+    const dayDishes = dishes.filter(dish => (Array.isArray(dish.planDates) ? dish.planDates : [dish.planDate]).includes(day.value));
     const usableInventory = remainingInventory.filter(item => !item.expiryDate || item.expiryDate >= day.value);
     const ingredients = buildBasket(dayDishes, usableInventory);
     remainingInventory = consumeInventory(remainingInventory, dayDishes, { usableOn: day.value }).inventory;

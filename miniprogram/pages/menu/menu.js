@@ -1,12 +1,14 @@
 const { loadState, updateState } = require('../../services/store');
 const { dateChoices } = require('../../utils/date');
+const { planDatesOf, isPlannedOn, addPlanDate, removePlanDate } = require('../../utils/schedule');
 
 function withWishText(dish) {
   const me = dish.wantedBy.includes('me');
   const partner = dish.wantedBy.includes('partner');
   const wishText = me && partner ? '我和她都想吃' : me ? '我想吃' : '她想吃';
   const plate = dish.plate || 'sage';
-  return { ...dish, plate, plateImage: `/assets/plates/${plate}.png`, wishText };
+  const planDates = planDatesOf(dish);
+  return { ...dish, planDates, plate, plateImage: `/assets/plates/${plate}.png`, wishText };
 }
 
 Page({
@@ -37,8 +39,8 @@ Page({
     const selectedIndex = Math.min(this.data.selectedIndex, Math.max(0, dishes.length - 1));
     const selectedDish = dishes[selectedIndex] || null;
     const dateOptions = dateChoices();
-    const weekDays = dateOptions.map(day => ({ ...day, dateText: day.value.slice(5).replace('-', '/'), dishes: dishes.filter(dish => dish.planDate === day.value) }));
-    const plannedCount = dishes.filter(dish => dateOptions.some(day => day.value === dish.planDate)).length;
+    const weekDays = dateOptions.map(day => ({ ...day, dateText: day.value.slice(5).replace('-', '/'), dishes: dishes.filter(dish => isPlannedOn(dish, day.value)) }));
+    const plannedCount = dishes.filter(dish => dateOptions.some(day => isPlannedOn(dish, day.value))).length;
     this.setData({ dishes, selectedIndex, selectedDish, dateOptions, weekDays, plannedCount });
   },
   selectDish(event) {
@@ -90,12 +92,12 @@ Page({
   arrangeDish() {
     if (!this.data.selectedDish) return;
     this.setTabHidden(true);
-    this.setData({ showArrange: true, arrangeDate: this.data.selectedDish.planDate || this.data.dateOptions[0].value });
+    this.setData({ showArrange: true, arrangeDate: this.data.dateOptions[0].value });
   },
   chooseArrangeDate(event) { this.setData({ arrangeDate: event.currentTarget.dataset.date }); },
   confirmArrange() {
     const selectedDish = this.data.selectedDish;
-    updateState(state => { const dish = state.dishes.find(item => item.id === selectedDish.id); if (dish) dish.planDate = this.data.arrangeDate; });
+    updateState(state => { const dish = state.dishes.find(item => item.id === selectedDish.id); if (dish) addPlanDate(dish, this.data.arrangeDate); });
     const label = this.data.dateOptions.find(item => item.value === this.data.arrangeDate).label;
     this.closeSheets(); this.refresh(); wx.showToast({ title: `已安排${label}`, icon: 'success' });
   },
@@ -124,7 +126,7 @@ Page({
   confirmPicker() {
     const selectedIds = new Set(this.data.pickerSelectedIds);
     if (!selectedIds.size) return;
-    updateState(state => state.dishes.forEach(dish => { if (selectedIds.has(dish.id)) dish.planDate = this.data.pickerDate; }));
+    updateState(state => state.dishes.forEach(dish => { if (selectedIds.has(dish.id)) addPlanDate(dish, this.data.pickerDate); }));
     const count = selectedIds.size;
     this.closeSheets(); this.refresh(); wx.showToast({ title: `已安排${count}道菜`, icon: 'success' });
   },
@@ -132,7 +134,7 @@ Page({
   editDayDish(event) { this.closeSheets(); wx.navigateTo({ url: `/pages/dish-edit/dish-edit?id=${event.currentTarget.dataset.id}` }); },
   unscheduleDish(event) {
     const dishId = event.currentTarget.dataset.id;
-    updateState(state => { const dish = state.dishes.find(item => item.id === dishId); if (dish) dish.planDate = ''; });
+    updateState(state => { const dish = state.dishes.find(item => item.id === dishId); if (dish) removePlanDate(dish, this.data.activeDay.value); });
     this.setData({ activeDay: { ...this.data.activeDay, dishes: this.data.activeDay.dishes.filter(item => item.id !== dishId) } });
     this.refresh();
   },

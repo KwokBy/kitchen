@@ -1,6 +1,7 @@
 const { loadState, updateState } = require('../../services/store');
 const { formatDate, addDays } = require('../../utils/date');
 const { consumeInventory } = require('../../utils/ingredients');
+const { planDatesOf, isPlannedOn, addPlanDate, removePlanDate } = require('../../utils/schedule');
 
 function withPlate(dish) {
   const plate = dish.plate || 'sage';
@@ -14,9 +15,11 @@ Page({
     const state = loadState();
     const today = formatDate(new Date());
     const tomorrowDate = formatDate(addDays(new Date(), 1));
-    const dishes = state.dishes.filter(dish => dish.planDate === today).map(withPlate);
-    const tomorrowDishes = state.dishes.filter(dish => dish.planDate === tomorrowDate).map(withPlate);
-    const missedDishes = state.dishes.filter(dish => dish.planDate && dish.planDate < today).map(withPlate);
+    const dishes = state.dishes.filter(dish => isPlannedOn(dish, today)).map(withPlate);
+    const tomorrowDishes = state.dishes.filter(dish => isPlannedOn(dish, tomorrowDate)).map(withPlate);
+    const missedDishes = state.dishes.flatMap(dish => planDatesOf(dish)
+      .filter(planDate => planDate < today)
+      .map(planDate => ({ ...withPlate(dish), planDate, occurrenceId: `${dish.id}-${planDate}` })));
     this.setData({
       dishes,
       tomorrowDishes,
@@ -38,10 +41,10 @@ Page({
   },
   surpriseTomorrow() {
     const state = loadState();
-    const candidates = state.dishes.filter(dish => !dish.planDate);
+    const candidates = state.dishes.filter(dish => !isPlannedOn(dish, this.data.tomorrowDate));
     if (!candidates.length) return wx.showToast({ title: '菜库里还没有可安排的菜', icon: 'none' });
     const choice = candidates[Math.floor(Math.random() * candidates.length)];
-    updateState(next => { const dish = next.dishes.find(item => item.id === choice.id); if (dish) dish.planDate = this.data.tomorrowDate; });
+    updateState(next => { const dish = next.dishes.find(item => item.id === choice.id); if (dish) addPlanDate(dish, this.data.tomorrowDate); });
     this.onShow();
     wx.showToast({ title: `明天吃${choice.name}`, icon: 'none' });
   },
@@ -59,7 +62,7 @@ Page({
         this.data.dishes.forEach(dish => {
           state.history.unshift({ id: `h-${Date.now()}-${dish.id}`, dishId: dish.id, at: now });
           const storedDish = state.dishes.find(item => item.id === dish.id);
-          if (storedDish) storedDish.planDate = '';
+          if (storedDish) removePlanDate(storedDish, this.data.todayDate);
         });
       });
       wx.showToast({ title: '已记录并更新冰箱', icon: 'success' });
@@ -68,13 +71,18 @@ Page({
   },
   moveMissedToToday(event) {
     const id = event.currentTarget.dataset.id;
-    updateState(state => { const dish = state.dishes.find(item => item.id === id); if (dish) dish.planDate = this.data.todayDate; });
+    const date = event.currentTarget.dataset.date;
+    updateState(state => {
+      const dish = state.dishes.find(item => item.id === id);
+      if (dish) { removePlanDate(dish, date); addPlanDate(dish, this.data.todayDate); }
+    });
     this.onShow();
     wx.showToast({ title: '已改到今天', icon: 'success' });
   },
   clearMissed(event) {
     const id = event.currentTarget.dataset.id;
-    updateState(state => { const dish = state.dishes.find(item => item.id === id); if (dish) dish.planDate = ''; });
+    const date = event.currentTarget.dataset.date;
+    updateState(state => { const dish = state.dishes.find(item => item.id === id); if (dish) removePlanDate(dish, date); });
     this.onShow();
   }
 });

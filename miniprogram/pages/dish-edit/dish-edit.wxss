@@ -23,6 +23,7 @@
 .wanted-card.partner > text { background: #d85d3f; }
 .date-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 20rpx; }
 .date-row > text { color: #d85d3f; font-size: 22rpx; }
+.plan-summary { display: block; margin-top: 12rpx; color: #607263; font-size: 19rpx; line-height: 1.5; }
 .save-button { margin-top: 38rpx; }
 .ingredient-checks { margin-top: 14rpx; padding: 8rpx 22rpx; border-radius: 28rpx; background: rgba(255,255,255,.48); }
 .ingredient-check { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; padding: 18rpx 0; border-bottom: 1rpx solid rgba(53,70,55,.1); }

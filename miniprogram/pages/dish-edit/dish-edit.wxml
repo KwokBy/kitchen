@@ -32,8 +32,9 @@
       <view class="wanted-card partner {{partnerWanted ? 'is-active' : ''}}" data-person="partner" bindtap="toggleWanted"><text>她</text><small>她想吃</small></view>
     </view>
 
-    <text class="field-label">安排到哪天（可选）</text>
+    <text class="field-label">再安排到哪天（可选）</text>
     <view class="date-row"><picker mode="date" value="{{planDate}}" start="{{today}}" bindchange="onPlanDateChange"><view class="picker-field">{{planDate || '暂不安排'}}<text>⌄</text></view></picker><text wx:if="{{planDate}}" bindtap="clearPlanDate">清除</text></view>
+    <text wx:if="{{planDates.length}}" class="plan-summary">这道菜已经安排了 {{planDates.length}} 天；新增日期不会覆盖原来的安排。</text>
 
     <text class="field-label">做菜备注</text>
     <input class="text-input" name="note" value="{{note}}" placeholder="例如：少辣，多一点汁" />

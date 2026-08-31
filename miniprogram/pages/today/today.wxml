@@ -6,7 +6,7 @@
 
   <view wx:if="{{missedDishes.length}}" class="missed-card">
     <view class="missed-head"><view><small>计划有变化也没关系</small><strong>有 {{missedDishes.length}} 道菜那天没做</strong></view><text>未扣库存</text></view>
-    <view class="missed-row" wx:for="{{missedDishes}}" wx:key="id"><view><strong>{{item.name}}</strong><small>原计划 {{item.planDate}}</small></view><button class="today" data-id="{{item.id}}" bindtap="moveMissedToToday">今天做</button><button data-id="{{item.id}}" bindtap="clearMissed">暂不做</button></view>
+    <view class="missed-row" wx:for="{{missedDishes}}" wx:key="occurrenceId"><view><strong>{{item.name}}</strong><small>原计划 {{item.planDate}}</small></view><button class="today" data-id="{{item.id}}" data-date="{{item.planDate}}" bindtap="moveMissedToToday">今天做</button><button data-id="{{item.id}}" data-date="{{item.planDate}}" bindtap="clearMissed">暂不做</button></view>
   </view>
 
   <view class="section-head today-section-head"><text>今日食谱</text><text>{{dishes.length ? dishes.length + ' 道菜' : '还没安排'}}</text></view>

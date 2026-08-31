@@ -9,11 +9,20 @@ function loadState() {
     wx.setStorageSync(STORAGE_KEY, initial);
     return initial;
   }
+  let changed = false;
   if ((saved.version || 1) < 2 || !saved.identity || typeof saved.identity.avatarUrl !== 'string' || typeof saved.identity.profileComplete !== 'boolean') {
-    saved.version = 2;
     saved.identity = { bound: false, openid: '', nickname: '', avatarUrl: '', profileComplete: false, ...(saved.identity || {}) };
-    wx.setStorageSync(STORAGE_KEY, saved);
+    changed = true;
   }
+  if ((saved.version || 1) < 3 || saved.dishes.some(dish => !Array.isArray(dish.planDates))) {
+    saved.dishes.forEach(dish => {
+      dish.planDates = [...new Set((Array.isArray(dish.planDates) ? dish.planDates : (dish.planDate ? [dish.planDate] : [])).filter(Boolean))].sort();
+      delete dish.planDate;
+    });
+    changed = true;
+  }
+  saved.version = 3;
+  if (changed) wx.setStorageSync(STORAGE_KEY, saved);
   return saved;
 }
 
