@@ -5,7 +5,8 @@ function withWishText(dish) {
   const me = dish.wantedBy.includes('me');
   const partner = dish.wantedBy.includes('partner');
   const wishText = me && partner ? '我和她都想吃' : me ? '我想吃' : '她想吃';
-  return { ...dish, plate: dish.plate || 'sage', wishText };
+  const plate = dish.plate || 'sage';
+  return { ...dish, plate, plateImage: `/assets/plates/${plate}.png`, wishText };
 }
 
 Page({
@@ -17,6 +18,7 @@ Page({
     tableMotion: '', plateMotion: ''
   },
   onShow() {
+    if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 2 });
     this.refresh();
     if (getApp().globalData.openWishPicker) {
       getApp().globalData.openWishPicker = false;

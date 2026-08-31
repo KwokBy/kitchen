@@ -1,21 +1,42 @@
 const { loadState, updateState } = require('../../services/store');
-const { formatDate } = require('../../utils/date');
+const { formatDate, addDays } = require('../../utils/date');
+
+function withPlate(dish) {
+  const plate = dish.plate || 'sage';
+  return { ...dish, plate, plateImage: `/assets/plates/${plate}.png` };
+}
 
 Page({
-  data: { dishes: [], history: [], dateText: '' },
+  data: { dishes: [], tomorrowDishes: [], tomorrowDate: '', history: [], dateText: '' },
   onShow() {
+    if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 0 });
     const state = loadState();
     const today = formatDate(new Date());
-    const dishes = state.dishes.filter(dish => dish.planDate === today);
+    const tomorrowDate = formatDate(addDays(new Date(), 1));
+    const dishes = state.dishes.filter(dish => dish.planDate === today).map(withPlate);
+    const tomorrowDishes = state.dishes.filter(dish => dish.planDate === tomorrowDate).map(withPlate);
     this.setData({
       dishes,
-      history: state.history.slice(0, 4).map(item => ({ ...item, dish: state.dishes.find(dish => dish.id === item.dishId) })).filter(item => item.dish),
+      tomorrowDishes,
+      tomorrowDate,
+      history: state.history.slice(0, 4).map(item => ({ ...item, dish: state.dishes.find(dish => dish.id === item.dishId) })).filter(item => item.dish).map(item => ({ ...item, dish: withPlate(item.dish) })),
       dateText: new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date())
     });
   },
   goMenu() {
     getApp().globalData.openWishPicker = true;
     wx.switchTab({ url: '/pages/menu/menu' });
+  },
+  goHistory() { wx.pageScrollTo({ selector: '#meal-history', duration: 280 }); },
+  addTomorrowDish() { wx.navigateTo({ url: `/pages/dish-edit/dish-edit?planDate=${this.data.tomorrowDate}` }); },
+  surpriseTomorrow() {
+    const state = loadState();
+    const candidates = state.dishes.filter(dish => !dish.planDate);
+    if (!candidates.length) return wx.showToast({ title: '菜库里还没有可安排的菜', icon: 'none' });
+    const choice = candidates[Math.floor(Math.random() * candidates.length)];
+    updateState(next => { const dish = next.dishes.find(item => item.id === choice.id); if (dish) dish.planDate = this.data.tomorrowDate; });
+    this.onShow();
+    wx.showToast({ title: `明天吃${choice.name}`, icon: 'none' });
   },
   startMeal() {
     if (!this.data.dishes.length) {

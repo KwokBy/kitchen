@@ -11,10 +11,10 @@ Page({
     image: '/assets/dishes/dish-1.png',
     plate: 'sage',
     plateOptions: [
-      { key: 'sage', label: '青瓷' },
-      { key: 'cream', label: '米釉' },
-      { key: 'pink', label: '花点' },
-      { key: 'blue', label: '云边' }
+      { key: 'sage', label: '青瓷', image: '/assets/plates/sage.png' },
+      { key: 'cream', label: '米釉', image: '/assets/plates/cream.png' },
+      { key: 'pink', label: '花点', image: '/assets/plates/pink.png' },
+      { key: 'blue', label: '云边', image: '/assets/plates/blue.png' }
     ],
     wantedBy: ['partner'],
     meWanted: false,

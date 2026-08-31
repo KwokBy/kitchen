@@ -4,7 +4,7 @@ const kitchenService = require('../../services/kitchen');
 Page({
   data: { state: {}, meInitial: '我', partnerInitial: '她', activeTab: 'overview', showCreate: false, joinCode: '', showWechatProfile: false, draftAvatarUrl: '', draftNickname: '' },
   onLoad(options) { if (options.invite) this.setData({ joinCode: options.invite.toUpperCase(), activeTab: 'kitchen' }); },
-  onShow() { this.refresh(); },
+  onShow() { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 3 }); this.refresh(); },
   refresh() {
     const state = loadState();
     this.setData({

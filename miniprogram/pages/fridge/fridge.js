@@ -12,7 +12,7 @@ function status(expiryDate) {
 
 Page({
   data: { items: [], basketItems: [], missingCount: 0, attentionCount: 0, showEditor: false, defaultExpiry: '' },
-  onShow() { this.refresh(); },
+  onShow() { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 1 }); this.refresh(); },
   refresh() {
     const state = loadState();
     const items = state.inventory.map(item => ({ ...item, status: status(item.expiryDate) })).sort((a, b) => a.expiryDate.localeCompare(b.expiryDate));

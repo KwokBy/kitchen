@@ -8,12 +8,12 @@
       <text class="field-label photo-label">菜的肖像</text>
       <view class="photo-actions"><view data-source="album" bindtap="chooseImage">从相册添加</view><view data-source="camera" bindtap="chooseImage">拍照</view></view>
       <view class="dish-preview">
-        <view class="preview-plate plate-{{plate}}"><image src="{{image}}" mode="aspectFill" /></view>
+        <view class="preview-plate"><image class="preview-plate-layer" src="/assets/plates/{{plate}}.png" mode="aspectFit" /><image class="preview-food-layer" src="{{image}}" mode="aspectFit" /></view>
         <text>照片会裁成圆形，放进你选的盘子</text>
       </view>
       <view class="plate-options">
         <view wx:for="{{plateOptions}}" wx:key="key" class="plate-option {{plate === item.key ? 'is-active' : ''}}" data-plate="{{item.key}}" bindtap="selectPlate">
-          <view class="plate-swatch plate-{{item.key}}"></view><small>{{item.label}}</small>
+          <image class="plate-swatch" src="{{item.image}}" mode="aspectFit" /><small>{{item.label}}</small>
         </view>
       </view>
     </view>

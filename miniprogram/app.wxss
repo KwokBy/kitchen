@@ -8,7 +8,8 @@ page {
   --line: rgba(51, 73, 56, 0.16);
   min-height: 100%;
   color: var(--ink);
-  background: var(--paper);
+  background-color: var(--paper);
+  background-image: repeating-radial-gradient(circle at 18% 22%, rgba(61,76,60,.035) 0 1rpx, transparent 1rpx 6rpx);
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
 }
 
@@ -18,7 +19,7 @@ view, text, button, input, textarea, image, scroll-view, swiper, swiper-item {
 
 button::after { border: 0; }
 
-.page-shell { min-height: 100vh; padding: 28rpx 36rpx 52rpx; }
+.page-shell { min-height: 100vh; padding: 28rpx 36rpx 170rpx; }
 .eyebrow { display: block; color: var(--ink-soft); font-size: 20rpx; font-weight: 600; letter-spacing: 4rpx; }
 .page-title { display: block; margin-top: 8rpx; font-family: STKaiti, KaiTi, serif; font-size: 48rpx; font-weight: 700; }
 .page-subtitle { display: block; margin-top: 8rpx; color: var(--ink-soft); font-size: 24rpx; line-height: 1.55; }

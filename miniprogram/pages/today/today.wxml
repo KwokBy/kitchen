@@ -1,22 +1,24 @@
 <view class="page-shell today-page">
   <text class="eyebrow">{{dateText}}</text>
-  <view class="brand-row">
-    <view><text class="brand-title">熹贵妃的小厨房</text><text class="brand-copy">两个人，好好吃饭</text></view>
-    <image class="brand-illustration" src="/assets/kitchen-pals.jpg" mode="aspectFit" />
-  </view>
+  <view wx:if="{{dishes.length}}" class="meal-notice">已为今日食谱安排 {{dishes.length}} 道菜</view>
+  <image class="menu-book" src="/assets/illustrations/menu-book.png" mode="aspectFit" />
+  <view class="quick-actions"><button class="soft-button" bindtap="goMenu">✦ 我想吃的</button><button class="is-active" bindtap="goHistory">♨ 我烧过的</button></view>
 
-  <view class="section-head today-section-head"><text>今日菜单</text><text>{{dishes.length ? dishes.length + ' 道菜' : '还没安排'}}</text></view>
-  <view class="today-board paper-card">
+  <view class="section-head today-section-head"><text>今日食谱</text><text>{{dishes.length ? dishes.length + ' 道菜' : '还没安排'}}</text></view>
+  <view class="today-board">
     <scroll-view wx:if="{{dishes.length}}" scroll-x enhanced show-scrollbar="{{false}}" class="today-dish-scroll">
-      <view class="today-dish-row {{dishes.length <= 2 ? 'is-few' : ''}}"><view wx:for="{{dishes}}" wx:key="id" class="today-dish-card"><image src="{{item.image}}" mode="aspectFill" /><text>{{item.name}}</text><small>{{item.note}}</small></view></view>
+      <view class="today-dish-row {{dishes.length <= 2 ? 'is-few' : ''}}"><view wx:for="{{dishes}}" wx:key="id" class="today-dish-card"><view class="today-dish-image dish-composite"><image class="plate-layer" src="{{item.plateImage}}" mode="aspectFit" /><image class="food-layer" src="{{item.image}}" mode="aspectFit" /></view><text>{{item.name}}</text><small>{{item.note}}</small></view></view>
     </scroll-view>
     <view wx:else class="empty-today"><text>今天还没安排菜</text><small>先去菜单挑一道想吃的</small></view>
-    <view class="today-actions"><button class="soft-button" bindtap="goMenu">＋ 加一道</button><button wx:if="{{dishes.length}}" class="primary-button" bindtap="startMeal">今天就吃这些</button></view>
+    <view class="today-actions"><button class="soft-button" bindtap="goMenu">帮我想道菜</button><button wx:if="{{dishes.length}}" class="primary-button" bindtap="startMeal">今天就吃这些</button></view>
   </view>
 
-  <view class="section-head"><text>最近吃过</text><text>每一顿都算数</text></view>
+  <view class="section-head tomorrow-head"><text>明日食谱</text><text>{{tomorrowDishes.length ? tomorrowDishes.length + ' 道菜' : '还没安排'}}</text></view>
+  <view class="tomorrow-board"><button class="soft-button" bindtap="surpriseTomorrow">随便来一顿</button><image src="/assets/illustrations/meal-idea.png" mode="aspectFit" /><button class="soft-button" bindtap="addTomorrowDish">帮我想道菜</button></view>
+
+  <view id="meal-history" class="section-head"><text>最近吃过</text><text>每一顿都算数</text></view>
   <scroll-view scroll-x class="history-row">
-    <view class="history-item" wx:for="{{history}}" wx:key="id"><image src="{{item.dish.image}}" mode="aspectFill" /><text>{{item.dish.name}}</text></view>
+    <view class="history-item" wx:for="{{history}}" wx:key="id"><view class="history-dish-image dish-composite"><image class="plate-layer" src="{{item.dish.plateImage}}" mode="aspectFit" /><image class="food-layer" src="{{item.dish.image}}" mode="aspectFit" /></view><text>{{item.dish.name}}</text></view>
     <view wx:if="{{!history.length}}" class="history-empty">吃完第一顿，它会出现在这里。</view>
   </scroll-view>
 </view>
