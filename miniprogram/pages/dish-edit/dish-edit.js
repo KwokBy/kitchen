@@ -32,7 +32,7 @@ Page({
       meWanted: dish ? dish.wantedBy.includes('me') : false,
       partnerWanted: dish ? dish.wantedBy.includes('partner') : true,
       today: formatDate(new Date()),
-      planDate: dish ? dish.planDate : '',
+      planDate: dish ? dish.planDate : (options.planDate || ''),
       note: dish ? dish.note : '',
       ingredientsText: dish ? dish.ingredients.join('\n') : ''
     });

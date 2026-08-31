@@ -2,7 +2,8 @@
   <text class="eyebrow">我的</text><text class="page-title">{{state.profile.homeName}}</text><text class="page-subtitle">两个人的身份、共享厨房和菜单习惯。</text>
   <view class="family-card paper-card"><view class="person"><text>{{meInitial}}</text><view><strong>{{state.profile.meName}}</strong><small>{{state.profile.meRole}}</small></view></view><em>一起开饭</em><view class="person partner"><text>{{partnerInitial}}</text><view><strong>{{state.profile.partnerName}}</strong><small>{{state.profile.partnerRole}}</small></view></view></view>
 
-  <view class="wechat-card paper-card"><text class="wechat-icon">微</text><view><strong>微信身份</strong><small>{{state.identity.bound ? '已绑定 · ' + state.identity.nickname : '绑定后才能创建或加入共享厨房'}}</small></view><button wx:if="{{!state.identity.bound}}" bindtap="bindWechat">绑定微信</button><text wx:else class="bound-tag">已绑定</text></view>
+  <view wx:if="{{!state.identity.bound}}" class="wechat-login paper-card" bindtap="loginWechat"><text class="wechat-icon">微</text><view><strong>微信登录</strong><small>登录后创建或加入两个人的厨房</small></view><text class="login-arrow">›</text></view>
+  <view wx:else class="wechat-login is-logged paper-card"><text class="wechat-icon">微</text><view><strong>{{state.identity.nickname || state.profile.meName}}</strong><small>已通过微信登录</small></view><text class="logged-tag">已登录</text></view>
 
   <view class="kitchen-section">
     <view wx:if="{{state.kitchen}}" class="doorplate"><small>两个人的共享厨房</small><text>{{state.kitchen.name}}</text><small>厨房邀请码</small><strong>{{state.kitchen.inviteCode}}</strong><small>她打开分享卡片后即可加入</small><view class="member-state">{{state.kitchen.memberCount}} 位成员</view></view>

@@ -13,12 +13,12 @@ Page({
       partnerInitial: state.profile.partnerName.charAt(0) || '她'
     });
   },
-  async bindWechat() {
-    try { await kitchenService.bindIdentity(); this.refresh(); wx.showToast({ title: '微信身份已绑定', icon: 'success' }); }
-    catch (error) { wx.showToast({ title: error.message || '绑定失败，请检查后端', icon: 'none' }); }
+  async loginWechat() {
+    try { await kitchenService.bindIdentity(); this.refresh(); wx.showToast({ title: '微信登录成功', icon: 'success' }); }
+    catch (error) { wx.showToast({ title: error.message || '登录失败，请稍后再试', icon: 'none' }); }
   },
   toggleCreate() {
-    if (!this.data.state.identity.bound) return wx.showToast({ title: '先绑定微信身份', icon: 'none' });
+    if (!this.data.state.identity.bound) return wx.showToast({ title: '请先微信登录', icon: 'none' });
     this.setData({ showCreate: !this.data.showCreate });
   },
   async createKitchen(event) {
@@ -29,7 +29,7 @@ Page({
   },
   onJoinCode(event) { this.setData({ joinCode: event.detail.value.toUpperCase() }); },
   async joinKitchen() {
-    if (!this.data.state.identity.bound) return wx.showToast({ title: '先绑定微信身份', icon: 'none' });
+    if (!this.data.state.identity.bound) return wx.showToast({ title: '请先微信登录', icon: 'none' });
     if (this.data.joinCode.length !== 6) return wx.showToast({ title: '请输入6位邀请码', icon: 'none' });
     try { await kitchenService.joinKitchen(this.data.joinCode); this.refresh(); wx.showToast({ title: '已加入厨房', icon: 'success' }); }
     catch (error) { wx.showToast({ title: '邀请码无效或已过期', icon: 'none' }); }

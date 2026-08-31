@@ -1,7 +1,7 @@
 .brand-row { display: flex; align-items: center; justify-content: space-between; min-height: 220rpx; }
 .brand-title { display: block; font-family: STKaiti, KaiTi, serif; font-size: 48rpx; font-weight: 700; }
 .brand-copy { display: block; margin-top: 16rpx; color: #d85d3f; font-family: STKaiti, KaiTi, serif; font-size: 24rpx; transform: rotate(-4deg); }
-.brand-illustration { width: 230rpx; height: 210rpx; }
+.brand-illustration { width: 230rpx; height: 210rpx; border-radius: 34%; filter: saturate(.88) contrast(1.06); mix-blend-mode: multiply; }
 .today-board { overflow: hidden; padding: 24rpx; background-image: linear-gradient(rgba(53,70,55,.04) 1rpx, transparent 1rpx), linear-gradient(90deg, rgba(53,70,55,.04) 1rpx, transparent 1rpx); background-size: 44rpx 44rpx; }
 .dish-swiper { height: 350rpx; }
 .dish-slide { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 320rpx; }

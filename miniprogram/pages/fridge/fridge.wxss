@@ -4,9 +4,8 @@
 .fridge-summary text { color: #607263; font-size: 20rpx; }
 .fridge-summary .warning strong { color: #d85d3f; }
 .add-stock { margin-bottom: 20rpx; }
-.stock-form { margin-bottom: 22rpx; padding: 24rpx; }
 .date-picker { display: flex; align-items: center; height: 88rpx; padding: 0 28rpx; border-radius: 999rpx; background: rgba(255,255,255,.72); }
-.stock-form .primary-button { margin-top: 28rpx; }
+.stock-sheet .primary-button { margin-top: 28rpx; }
 .stock-list { display: flex; flex-direction: column; }
 .stock-row { display: grid; grid-template-columns: 76rpx 1fr auto; align-items: center; margin-bottom: 14rpx; padding: 20rpx; }
 .stock-icon { display: flex; align-items: center; justify-content: center; width: 68rpx; height: 68rpx; border-radius: 50%; background: rgba(120,144,124,.16); font-family: STKaiti, KaiTi, serif; }

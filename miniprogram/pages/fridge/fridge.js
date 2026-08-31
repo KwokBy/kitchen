@@ -37,7 +37,9 @@ Page({
     const missingCount = basketItems.filter(item => !item.inFridge).length;
     this.setData({ items, basketItems, missingCount, attentionCount, defaultExpiry: formatDate(addDays(new Date(), 3)) });
   },
-  toggleEditor() { this.setData({ showEditor: !this.data.showEditor }); },
+  openEditor() { this.setData({ showEditor: true }); },
+  closeEditor() { this.setData({ showEditor: false }); },
+  noop() {},
   onExpiryChange(event) { this.setData({ defaultExpiry: event.detail.value }); },
   addStock(event) {
     const { name, quantity, expiryDate } = event.detail.value;

@@ -1,6 +1,7 @@
 .menu-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18rpx; }
 .menu-heading .page-title { display: block; }
-.wish-label { color: #607263; font-family: STKaiti, KaiTi, serif; font-size: 24rpx; }
+.menu-heading .page-title { white-space: nowrap; font-size: 40rpx; }
+.wish-label { width: auto; min-height: 58rpx; margin: 0; padding: 0 10rpx; color: #607263; background: transparent; font-family: STKaiti, KaiTi, serif; font-size: 24rpx; }
 .menu-stage { display: grid; grid-template-columns: 190rpx 1fr; align-items: center; min-height: 570rpx; margin: 0 -36rpx; overflow: hidden; }
 .dish-name-list { z-index: 2; height: 460rpx; padding-left: 36rpx; }
 .dish-name { display: block; padding: 11rpx 0; color: rgba(36,59,46,.4); font-family: STKaiti, KaiTi, serif; font-size: 27rpx; }
@@ -23,3 +24,34 @@
 .day-card small { max-width: 150rpx; overflow: hidden; font-family: STKaiti, KaiTi, serif; font-size: 22rpx; text-overflow: ellipsis; }
 .day-card em { margin-top: 5rpx; color: #d85d3f; font-size: 18rpx; font-style: normal; }
 .empty-menu { padding: 80rpx 20rpx; text-align: center; }
+.basket-entry { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 112rpx; margin-top: 22rpx; padding: 20rpx 26rpx; border-radius: 28rpx; color: white; background: #243b2e; text-align: left; }
+.basket-entry view { flex: 1; }
+.basket-entry strong, .basket-entry small { display: block; }
+.basket-entry strong { font-family: STKaiti, KaiTi, serif; font-size: 28rpx; }
+.basket-entry small { margin-top: 6rpx; color: rgba(255,255,255,.65); font-size: 19rpx; }
+.basket-entry > text { font-size: 42rpx; font-weight: 300; }
+.sheet-dish { display: flex; align-items: center; padding: 20rpx; border-radius: 28rpx; background: rgba(255,255,255,.55); }
+.sheet-dish image { width: 104rpx; height: 104rpx; margin-right: 22rpx; border: 10rpx solid rgba(255,255,255,.75); border-radius: 50%; }
+.sheet-dish strong, .sheet-dish small { display: block; }
+.sheet-dish strong { font-family: STKaiti, KaiTi, serif; font-size: 30rpx; }
+.sheet-dish small { margin-top: 5rpx; color: #607263; font-size: 20rpx; }
+.picker-filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10rpx; }
+.picker-filters button { width: 100%; min-width: 0; min-height: 66rpx; margin: 0; padding: 0 6rpx; border: 1rpx solid rgba(53,70,55,.13); border-radius: 999rpx; color: #607263; background: rgba(255,255,255,.62); font-size: 20rpx; }
+.picker-filters button.is-active { color: white; border-color: #243b2e; background: #243b2e; }
+.picker-stage { display: grid; grid-template-columns: 70rpx 1fr 70rpx; align-items: center; min-height: 410rpx; text-align: center; }
+.picker-stage > view > strong, .picker-stage > view > small { display: block; }
+.picker-stage > view > strong { margin-top: 12rpx; font-family: STKaiti, KaiTi, serif; font-size: 34rpx; }
+.picker-stage > view > small { margin-top: 5rpx; color: #607263; font-size: 20rpx; }
+.picker-table { display: flex; align-items: center; justify-content: center; width: 270rpx; height: 270rpx; margin: 20rpx auto 0; border-radius: 50%; background: repeating-linear-gradient(0deg, transparent 0 25rpx, rgba(68,96,65,.28) 25rpx 50rpx), repeating-linear-gradient(90deg, rgba(176,91,64,.3) 0 25rpx, rgba(245,239,215,.5) 25rpx 50rpx); }
+.picker-table image { width: 174rpx; height: 174rpx; border: 13rpx solid rgba(251,247,235,.94); border-radius: 50%; box-shadow: 0 18rpx 30rpx rgba(48,52,45,.22); }
+.picker-arrow { display: flex; flex: 0 0 62rpx; align-items: center; justify-content: center; width: 62rpx; min-width: 62rpx; max-width: 62rpx; height: 62rpx; margin: 0; padding: 0; border-radius: 50%; color: #243b2e; background: rgba(36,59,46,.08); font-size: 40rpx; }
+.picker-date-label { display: block; margin-top: 4rpx; font-size: 23rpx; font-weight: 600; }
+.picker-empty { padding: 60rpx 20rpx; color: #607263; text-align: center; }
+.day-dish-row { display: grid; grid-template-columns: 90rpx 1fr 88rpx 112rpx; align-items: center; gap: 12rpx; margin-bottom: 14rpx; padding: 16rpx; border-radius: 28rpx; background: rgba(255,255,255,.55); }
+.day-dish-row image { width: 82rpx; height: 82rpx; border-radius: 50%; }
+.day-dish-row strong, .day-dish-row small { display: block; }
+.day-dish-row strong { font-family: STKaiti, KaiTi, serif; font-size: 26rpx; }
+.day-dish-row small { margin-top: 4rpx; color: #607263; font-size: 18rpx; }
+.day-dish-row button { width: 100%; min-width: 0; min-height: 56rpx; margin: 0; padding: 0 8rpx; border-radius: 999rpx; color: #243b2e; background: rgba(36,59,46,.08); font-size: 19rpx; }
+.day-dish-row button.unschedule { color: #d85d3f; background: rgba(216,93,63,.08); }
+.day-add { margin-top: 18rpx; }

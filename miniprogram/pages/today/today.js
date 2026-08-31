@@ -13,7 +13,10 @@ Page({
       dateText: new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date())
     });
   },
-  goMenu() { wx.switchTab({ url: '/pages/menu/menu' }); },
+  goMenu() {
+    getApp().globalData.openWishPicker = true;
+    wx.switchTab({ url: '/pages/menu/menu' });
+  },
   startMeal() {
     if (!this.data.dishes.length) {
       wx.showToast({ title: '先安排今天的菜', icon: 'none' });

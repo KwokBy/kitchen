@@ -7,6 +7,7 @@ App({
   },
   globalData: {
     backendMode: 'local',
-    apiBaseUrl: ''
+    apiBaseUrl: '',
+    openWishPicker: false
   }
 });

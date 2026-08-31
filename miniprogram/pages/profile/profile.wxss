@@ -6,12 +6,13 @@
 .person.partner { flex-direction: row-reverse; text-align: right; }
 .person.partner > text { margin: 0 0 0 14rpx; background: #d85d3f; }
 .family-card em { color: #d85d3f; font-family: STKaiti, KaiTi, serif; font-size: 20rpx; font-style: normal; transform: rotate(-5deg); }
-.wechat-card { display: grid; grid-template-columns: 72rpx 1fr auto; align-items: center; gap: 16rpx; margin-top: 22rpx; padding: 20rpx; }
+.wechat-login { display: grid; grid-template-columns: 72rpx 1fr auto; align-items: center; gap: 16rpx; width: 100%; min-height: 112rpx; margin-top: 22rpx; padding: 20rpx; color: #243b2e; text-align: left; }
 .wechat-icon { display: flex; align-items: center; justify-content: center; width: 70rpx; height: 70rpx; border-radius: 22rpx; color: white; background: #1aad19; }
-.wechat-card strong, .wechat-card small { display: block; }
-.wechat-card small { margin-top: 4rpx; color: #607263; font-size: 18rpx; }
-.wechat-card button { padding: 14rpx 20rpx; border-radius: 999rpx; color: white; background: #1aad19; font-size: 20rpx; }
-.bound-tag { padding: 8rpx 12rpx; border-radius: 999rpx; color: #187b28; background: rgba(26,173,25,.12); font-size: 18rpx; }
+.wechat-login strong, .wechat-login small { display: block; }
+.wechat-login strong { font-family: STKaiti, KaiTi, serif; font-size: 28rpx; }
+.wechat-login small { margin-top: 4rpx; color: #607263; font-size: 18rpx; }
+.login-arrow { color: #607263; font-size: 42rpx; font-weight: 300; }
+.logged-tag { padding: 8rpx 12rpx; border-radius: 999rpx; color: #187b28; background: rgba(26,173,25,.12); font-size: 18rpx; }
 .kitchen-section { margin-top: 22rpx; }
 .doorplate { padding: 36rpx; border-radius: 40rpx; color: white; background: #243b2e; text-align: center; box-shadow: 0 24rpx 48rpx rgba(36,59,46,.22); }
 .doorplate text, .doorplate strong, .doorplate small { display: block; }
