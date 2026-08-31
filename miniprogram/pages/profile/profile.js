@@ -14,6 +14,7 @@ Page({
     });
   },
   switchProfileTab(event) { this.setData({ activeTab: event.currentTarget.dataset.tab, showCreate: false }); },
+  handleMeProfile() { if (this.data.state.identity.bound) this.openWechatProfile(); else this.loginWechat(); },
   async loginWechat() {
     try {
       await kitchenService.bindIdentity();

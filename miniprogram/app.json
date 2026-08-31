@@ -14,15 +14,15 @@
     "backgroundTextStyle": "dark"
   },
   "tabBar": {
-    "color": "#607263",
-    "selectedColor": "#243B2E",
+    "color": "#879387",
+    "selectedColor": "#D85D3F",
     "backgroundColor": "#FBF7EB",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/today/today", "text": "今天" },
-      { "pagePath": "pages/menu/menu", "text": "菜单" },
-      { "pagePath": "pages/fridge/fridge", "text": "冰箱" },
-      { "pagePath": "pages/profile/profile", "text": "我的" }
+      { "pagePath": "pages/today/today", "text": "今天", "iconPath": "assets/tabbar/today.png", "selectedIconPath": "assets/tabbar/today-active.png" },
+      { "pagePath": "pages/menu/menu", "text": "菜单", "iconPath": "assets/tabbar/menu.png", "selectedIconPath": "assets/tabbar/menu-active.png" },
+      { "pagePath": "pages/fridge/fridge", "text": "冰箱", "iconPath": "assets/tabbar/fridge.png", "selectedIconPath": "assets/tabbar/fridge-active.png" },
+      { "pagePath": "pages/profile/profile", "text": "我的", "iconPath": "assets/tabbar/profile.png", "selectedIconPath": "assets/tabbar/profile-active.png" }
     ]
   },
   "style": "v2",
