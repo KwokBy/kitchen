@@ -5,11 +5,11 @@
     <scroll-view scroll-y class="dish-name-list">
       <text wx:for="{{dishes}}" wx:key="id" class="dish-name {{index === selectedIndex ? 'is-active' : ''}}" data-index="{{index}}" bindtap="selectDish">{{item.name}}</text>
     </scroll-view>
-    <view class="round-table {{tableMotion}}"><view class="selected-plate dish-composite {{plateMotion}}"><image class="plate-layer" src="{{selectedDish.plateImage}}" mode="aspectFit" /><image class="food-layer" src="{{selectedDish.image}}" mode="aspectFit" /></view></view>
+    <view class="round-table {{tableMotion}}" bindtouchstart="onMenuTouchStart" bindtouchend="onMenuTouchEnd"><view class="selected-plate dish-composite {{plateMotion}}"><image class="plate-layer" src="{{selectedDish.plateImage}}" mode="aspectFit" /><image class="food-layer" src="{{selectedDish.image}}" mode="aspectFit" /></view></view>
   </view>
   <view wx:else class="empty-menu paper-card">还没有菜，先新增第一道。</view>
 
-  <view wx:if="{{selectedDish}}" class="selected-copy"><text>{{selectedDish.name}}</text><small>♥ {{selectedDish.wishText}}{{selectedDish.planDate ? ' · 已安排' : ''}}</small><small wx:if="{{selectedDish.note}}">{{selectedDish.note}}</small></view>
+  <view wx:if="{{selectedDish}}" class="selected-copy"><text>{{selectedDish.name}}</text><small>♥ {{selectedDish.wishText}}{{selectedDish.planDate ? ' · 已安排' : ''}}</small><small wx:if="{{selectedDish.note}}">{{selectedDish.note}}</small><small wx:if="{{dishes.length > 1}}" class="menu-swipe-hint">← 左右滑动换菜 →</small></view>
   <view class="menu-actions"><button class="soft-button add" bindtap="addDish">＋ 新增</button><button class="primary-button" bindtap="arrangeDish">安排</button><button class="soft-button" bindtap="editDish">编辑</button><button class="remove-button" bindtap="removeDish">移出</button></view>
 
   <view class="section-head"><text>这几天吃什么</text><text>她也可以来安排</text></view>
@@ -40,7 +40,7 @@
   <view class="bottom-sheet picker-sheet" catchtap="noop">
     <view class="sheet-head"><view><text>今天听谁的</text><strong>挑几道想吃的</strong></view><button class="sheet-close" bindtap="closeSheets">×</button></view>
     <view class="picker-filters"><view class="{{pickerMode === 'all' ? 'is-active' : ''}}" data-mode="all" bindtap="changePickerMode">全部菜</view><view class="{{pickerMode === 'me' ? 'is-active' : ''}}" data-mode="me" bindtap="changePickerMode">我想吃</view><view class="{{pickerMode === 'both' ? 'is-active' : ''}}" data-mode="both" bindtap="changePickerMode">我们都想吃</view></view>
-    <scroll-view wx:if="{{pickerDishes.length}}" scroll-y class="picker-grid-scroll">
+    <scroll-view wx:if="{{pickerDishes.length}}" scroll-y enhanced="{{true}}" show-scrollbar="{{false}}" bounces="{{true}}" enable-flex="{{true}}" class="picker-grid-scroll">
       <view class="picker-grid">
         <view wx:for="{{pickerDishes}}" wx:key="id" class="picker-card {{item.isSelected ? 'is-active' : ''}}" data-id="{{item.id}}" bindtap="selectPickerDish">
           <view class="picker-plate dish-composite"><image class="plate-layer" src="{{item.plateImage}}" mode="aspectFit" /><image class="food-layer" src="{{item.image}}" mode="aspectFit" /></view>
@@ -49,6 +49,7 @@
         </view>
       </view>
     </scroll-view>
+    <view wx:if="{{pickerDishes.length > 6}}" class="picker-scroll-hint">↑ 上滑查看更多</view>
     <view wx:else class="picker-empty">这个筛选里还没有菜</view>
     <text class="picker-date-label">安排到哪一天</text>
     <view class="date-chips"><view wx:for="{{dateOptions}}" wx:key="value" class="date-chip {{pickerDate === item.value ? 'is-active' : ''}}" data-date="{{item.value}}" bindtap="choosePickerDate">{{item.label}}</view></view>

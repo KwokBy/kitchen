@@ -15,7 +15,7 @@ Page({
     plannedCount: 0, showArrange: false, arrangeDate: '', showPicker: false,
     pickerMode: 'all', pickerDishes: [], pickerSelectedIds: [],
     pickerDate: '', showDay: false, activeDay: { label: '', value: '', dishes: [] },
-    tableMotion: '', plateMotion: '', showAddChoice: false, addChoiceDate: ''
+    tableMotion: '', plateMotion: '', showAddChoice: false, addChoiceDate: '', menuTouchStartX: 0
   },
   onShow() {
     if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 2, hidden: false });
@@ -43,6 +43,9 @@ Page({
   },
   selectDish(event) {
     const selectedIndex = Number(event.currentTarget.dataset.index);
+    this.animateSelection(selectedIndex);
+  },
+  animateSelection(selectedIndex) {
     if (selectedIndex === this.data.selectedIndex) return;
     const direction = selectedIndex > this.data.selectedIndex ? 'forward' : 'backward';
     clearTimeout(this.menuMotionTimer);
@@ -55,6 +58,20 @@ Page({
       });
       this.menuMotionTimer = setTimeout(() => this.setData({ tableMotion: '', plateMotion: '' }), 520);
     });
+  },
+  onMenuTouchStart(event) {
+    const touch = event.touches && event.touches[0];
+    if (touch) this.setData({ menuTouchStartX: touch.clientX });
+  },
+  onMenuTouchEnd(event) {
+    const touch = event.changedTouches && event.changedTouches[0];
+    if (!touch || this.data.dishes.length < 2) return;
+    const distance = touch.clientX - this.data.menuTouchStartX;
+    if (Math.abs(distance) < 45) return;
+    const nextIndex = distance < 0
+      ? Math.min(this.data.selectedIndex + 1, this.data.dishes.length - 1)
+      : Math.max(this.data.selectedIndex - 1, 0);
+    this.animateSelection(nextIndex);
   },
   onUnload() { clearTimeout(this.menuMotionTimer); },
   setTabHidden(hidden) { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ hidden }); },
