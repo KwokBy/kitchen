@@ -2,7 +2,7 @@ const { loadState, updateState } = require('../../services/store');
 const kitchenService = require('../../services/kitchen');
 
 Page({
-  data: { state: {}, meInitial: '我', partnerInitial: '她', activeTab: 'overview', showCreate: false, joinCode: '', showWechatProfile: false, draftAvatarUrl: '', draftNickname: '' },
+  data: { state: {}, meInitial: '我', partnerInitial: '她', activeTab: 'kitchen', showCreate: false, joinCode: '', showWechatProfile: false, draftAvatarUrl: '', draftNickname: '' },
   onLoad(options) { if (options.invite) this.setData({ joinCode: options.invite.toUpperCase(), activeTab: 'kitchen' }); },
   onShow() { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 3 }); this.refresh(); },
   refresh() {
@@ -65,20 +65,23 @@ Page({
     const name = event.detail.value.name.trim();
     if (!name) return wx.showToast({ title: '先给厨房起名', icon: 'none' });
     try { await kitchenService.createKitchen(name); this.setData({ showCreate: false }); this.refresh(); wx.showToast({ title: '厨房建好了', icon: 'success' }); }
-    catch (error) { wx.showToast({ title: '创建失败，请稍后重试', icon: 'none' }); }
+    catch (error) { wx.showToast({ title: error.message || '创建失败，请稍后重试', icon: 'none' }); }
   },
   onJoinCode(event) { this.setData({ joinCode: event.detail.value.toUpperCase() }); },
   async joinKitchen() {
     if (!this.data.state.identity.bound) return wx.showToast({ title: '请先微信登录', icon: 'none' });
     if (this.data.joinCode.length !== 6) return wx.showToast({ title: '请输入6位邀请码', icon: 'none' });
     try { await kitchenService.joinKitchen(this.data.joinCode); this.refresh(); wx.showToast({ title: '已加入厨房', icon: 'success' }); }
-    catch (error) { wx.showToast({ title: '邀请码无效或已过期', icon: 'none' }); }
+    catch (error) { wx.showToast({ title: error.message || '邀请码无效或已过期', icon: 'none' }); }
   },
   copyInvite() { wx.setClipboardData({ data: this.data.state.kitchen.inviteCode }); },
   saveProfile(event) {
     const values = event.detail.value;
-    updateState(state => { state.profile = { ...state.profile, ...values }; });
-    this.refresh(); wx.showToast({ title: '身份信息已保存', icon: 'success' });
+    updateState(state => {
+      state.profile = { ...state.profile, ...values };
+      if (state.kitchen && values.homeName) state.kitchen.name = values.homeName;
+    });
+    this.refresh(); wx.showToast({ title: '厨房设置已保存', icon: 'success' });
   },
   addCategory(event) {
     const category = event.detail.value.category.trim();
@@ -93,6 +96,7 @@ Page({
   },
   onShareAppMessage() {
     const kitchen = this.data.state.kitchen;
+    if (!kitchen || kitchen.memberCount >= 2) return { title: '来看看「熹贵妃的小厨房」', path: '/pages/today/today' };
     return { title: `${this.data.state.profile.meName}邀请你加入「${kitchen.name}」`, path: `/pages/profile/profile?invite=${kitchen.inviteCode}` };
   }
 });

@@ -1,35 +1,41 @@
 <view class="page-shell profile-page">
-  <text class="eyebrow">我的</text><text class="page-title">{{state.profile.homeName}}</text><text class="page-subtitle">把两个人的小厨房慢慢布置好。</text>
-  <view class="profile-tabs"><view class="{{activeTab === 'overview' ? 'is-active' : ''}}" data-tab="overview" bindtap="switchProfileTab">概览</view><view class="{{activeTab === 'kitchen' ? 'is-active' : ''}}" data-tab="kitchen" bindtap="switchProfileTab">厨房</view><view class="{{activeTab === 'settings' ? 'is-active' : ''}}" data-tab="settings" bindtap="switchProfileTab">设置</view></view>
+  <text class="eyebrow">我的</text><text class="page-title">先认出你，再一起开饭</text><text class="page-subtitle">微信账号属于你，成员和菜单属于当前厨房。</text>
 
-  <block wx:if="{{activeTab === 'overview'}}">
-    <view class="family-card paper-card"><view class="person me-person" bindtap="handleMeProfile"><image wx:if="{{state.identity.profileComplete}}" src="{{state.identity.avatarUrl}}" mode="aspectFill" /><text wx:else>{{meInitial}}</text><view><strong>{{state.identity.profileComplete ? state.identity.nickname : state.profile.meName}}</strong><small>{{state.profile.meRole}}</small><small class="wechat-state">{{state.identity.bound ? '微信已登录 · 点击修改' : '点击微信登录'}}</small></view></view><em>一起开饭</em><view class="person partner"><text>{{partnerInitial}}</text><view><strong>{{state.profile.partnerName}}</strong><small>{{state.profile.partnerRole}}</small></view></view></view>
+  <view class="account-card {{state.identity.bound ? 'is-bound' : ''}}">
+    <view class="account-avatar"><image wx:if="{{state.identity.profileComplete}}" src="{{state.identity.avatarUrl}}" mode="aspectFill" /><text wx:else>微</text></view>
+    <view class="account-copy"><small>微信账号</small><strong>{{state.identity.profileComplete ? state.identity.nickname : state.identity.bound ? '微信已登录' : '登录后一起用厨房'}}</strong><text>{{state.identity.bound ? state.identity.profileComplete ? '头像与昵称已同步' : '还差头像和昵称' : '保存身份后，才能创建或加入厨房'}}</text></view>
+    <button wx:if="{{!state.identity.bound}}" class="account-action login" bindtap="loginWechat">微信登录</button><button wx:else class="account-action" bindtap="openWechatProfile">{{state.identity.profileComplete ? '修改资料' : '完善资料'}}</button>
+  </view>
 
-    <view class="overview-links"><view data-tab="kitchen" bindtap="switchProfileTab"><text>⌂</text><strong>{{state.kitchen ? state.kitchen.name : '建立共享厨房'}}</strong><small>{{state.kitchen ? state.kitchen.memberCount + ' 位成员' : '创建或用邀请码加入'}}</small><em>›</em></view><view data-tab="settings" bindtap="switchProfileTab"><text>味</text><strong>称呼与菜品分类</strong><small>{{state.categories.length}} 个菜品大类</small><em>›</em></view></view>
-  </block>
+  <view class="profile-tabs"><view class="{{activeTab === 'kitchen' ? 'is-active' : ''}}" data-tab="kitchen" bindtap="switchProfileTab">我的厨房</view><view class="{{activeTab === 'settings' ? 'is-active' : ''}}" data-tab="settings" bindtap="switchProfileTab">厨房设置</view></view>
 
   <view wx:if="{{activeTab === 'kitchen'}}" class="kitchen-section">
-    <view wx:if="{{state.kitchen}}" class="doorplate"><small>两个人的共享厨房</small><text>{{state.kitchen.name}}</text><small>厨房邀请码</small><strong>{{state.kitchen.inviteCode}}</strong><small>她打开分享卡片后即可加入</small><view class="member-state">{{state.kitchen.memberCount}} 位成员</view></view>
-    <view wx:if="{{state.kitchen}}" class="invite-buttons"><button class="soft-button" bindtap="copyInvite">复制邀请码</button><button class="primary-button" open-type="share">分享给她</button></view>
-    <block wx:else><view class="kitchen-empty paper-card"><text>⌂</text><view><strong>还没有共享厨房</strong><small>新建一个厨房，再邀请她加入。</small></view></view><button class="primary-button" bindtap="toggleCreate">＋ 新建厨房</button><form wx:if="{{showCreate}}" class="create-form paper-card" bindsubmit="createKitchen"><input class="text-input" name="name" value="{{state.profile.homeName}}" placeholder="厨房名称" /><button class="primary-button" form-type="submit">创建并生成邀请码</button></form><view class="join-row"><input class="text-input" maxlength="6" value="{{joinCode}}" bindinput="onJoinCode" placeholder="输入她发来的邀请码" /><button bindtap="joinKitchen">加入</button></view></block>
+    <block wx:if="{{state.kitchen}}">
+      <view class="kitchen-label"><text>当前厨房</text><strong>{{state.kitchen.name}}</strong><small>{{state.kitchen.memberCount}} / 2 位成员</small></view>
+      <view class="members-card paper-card">
+        <view class="section-head"><text>厨房成员</text><text>各司其职</text></view>
+        <view class="member-row"><view class="member-avatar me"><image wx:if="{{state.identity.profileComplete}}" src="{{state.identity.avatarUrl}}" mode="aspectFill" /><text wx:else>{{meInitial}}</text></view><view class="member-copy"><strong>{{state.identity.profileComplete ? state.identity.nickname : state.profile.meName}}</strong><small>{{state.profile.meRole}}</small></view><text class="member-badge">我</text></view>
+        <view wx:if="{{state.kitchen.memberCount >= 2}}" class="member-row"><view class="member-avatar partner"><text>{{partnerInitial}}</text></view><view class="member-copy"><strong>{{state.profile.partnerName}}</strong><small>{{state.profile.partnerRole}}</small></view><text class="member-badge partner">她</text></view>
+        <view wx:else class="member-row waiting"><view class="member-avatar partner"><text>＋</text></view><view class="member-copy"><strong>等待她加入</strong><small>这个厨房还留有一个位置</small></view><text class="member-badge partner">空位</text></view>
+      </view>
+      <view class="invite-card {{state.kitchen.memberCount >= 2 ? 'is-full' : ''}}"><small>{{state.kitchen.memberCount >= 2 ? '厨房成员已到齐' : '厨房邀请码'}}</small><strong wx:if="{{state.kitchen.memberCount < 2}}">{{state.kitchen.inviteCode}}</strong><strong wx:else>两口之家</strong><text>{{state.kitchen.memberCount >= 2 ? '这个厨房只能由你们两个人共同使用' : '只能邀请一位成员，加入后厨房即满员'}}</text></view>
+      <view wx:if="{{state.kitchen.memberCount < 2}}" class="invite-buttons"><button class="soft-button" bindtap="copyInvite">复制邀请码</button><button class="primary-button" open-type="share">分享给她</button></view>
+    </block>
+    <block wx:else>
+      <view class="kitchen-empty paper-card"><text>⌂</text><view><strong>还没有加入厨房</strong><small>{{state.identity.bound ? '每个人只能有一个厨房：新建一个，或加入她的。' : '先登录微信，再创建或加入厨房。'}}</small></view></view>
+      <button wx:if="{{!state.identity.bound}}" class="primary-button" bindtap="loginWechat">先登录微信</button>
+      <block wx:else><button class="primary-button" bindtap="toggleCreate">＋ 新建厨房</button><form wx:if="{{showCreate}}" class="create-form paper-card" bindsubmit="createKitchen"><text class="form-caption">给新厨房挂块门牌</text><input class="text-input" name="name" value="{{state.profile.homeName}}" placeholder="厨房名称" /><button class="primary-button" form-type="submit">创建并生成邀请码</button></form><view class="join-divider"><text></text><small>或者加入她的</small><text></text></view><view class="join-row"><input class="text-input" maxlength="6" value="{{joinCode}}" bindinput="onJoinCode" placeholder="输入 6 位邀请码" /><button bindtap="joinKitchen">加入</button></view></block>
+    </block>
   </view>
 
   <block wx:if="{{activeTab === 'settings'}}">
-    <form class="settings-card paper-card" bindsubmit="saveProfile"><text class="settings-title">我们的称呼</text><text class="settings-hint">这些名字会出现在菜单和邀请卡片里。</text><text class="field-label">小厨房名称</text><input class="text-input" name="homeName" value="{{state.profile.homeName}}" /><view class="pair-fields"><view><text class="field-label">另一半昵称</text><input class="text-input" name="partnerName" value="{{state.profile.partnerName}}" /></view><view><text class="field-label">我的身份</text><input class="text-input" name="meRole" value="{{state.profile.meRole}}" /></view><view><text class="field-label">她的身份</text><input class="text-input" name="partnerRole" value="{{state.profile.partnerRole}}" /></view></view><button class="primary-button" form-type="submit">保存称呼</button></form>
-    <view class="settings-card paper-card"><view class="section-head"><text>菜品大类</text><text>{{state.categories.length}} 类</text></view><text class="settings-hint">新增菜时会使用这些分类。</text><view class="category-list"><view wx:for="{{state.categories}}" wx:key="*this">{{item}}<text data-category="{{item}}" bindtap="removeCategory">×</text></view></view><form class="category-add" bindsubmit="addCategory"><input class="text-input" name="category" placeholder="例如：烘焙" /><button form-type="submit">添加</button></form></view>
+    <block wx:if="{{state.kitchen}}">
+      <view class="settings-context"><small>正在设置</small><strong>{{state.kitchen.name}}</strong><text>这些内容只影响当前这个厨房。</text></view>
+      <form class="settings-card paper-card" bindsubmit="saveProfile"><text class="settings-title">厨房里的称呼</text><text class="settings-hint">会显示在菜单、点菜和邀请卡片中。</text><text class="field-label">厨房名称</text><input class="text-input" name="homeName" value="{{state.kitchen.name}}" /><text class="field-label">我的身份</text><input class="text-input" name="meRole" value="{{state.profile.meRole}}" /><text class="field-label">另一半昵称</text><input class="text-input" name="partnerName" value="{{state.profile.partnerName}}" /><text class="field-label">她的身份</text><input class="text-input" name="partnerRole" value="{{state.profile.partnerRole}}" /><button class="primary-button" form-type="submit">保存厨房称呼</button></form>
+      <view class="settings-card paper-card"><view class="section-head"><text>这个厨房的菜品大类</text><text>{{state.categories.length}} 类</text></view><text class="settings-hint">新增菜时会使用这些分类。</text><view class="category-list"><view wx:for="{{state.categories}}" wx:key="*this">{{item}}<text data-category="{{item}}" bindtap="removeCategory">×</text></view></view><form class="category-add" bindsubmit="addCategory"><input class="text-input" name="category" placeholder="例如：烘焙" /><button form-type="submit">添加</button></form></view>
+    </block>
+    <view wx:else class="settings-empty paper-card"><text>还没有可设置的厨房</text><small>创建或加入厨房后，这里才会出现成员称呼和菜品分类。</small><button data-tab="kitchen" bindtap="switchProfileTab">去我的厨房</button></view>
   </block>
 </view>
 
-<view wx:if="{{showWechatProfile}}" class="sheet-overlay" bindtap="closeWechatProfile">
-  <view class="bottom-sheet wechat-profile-sheet" catchtap="noop">
-    <view class="sheet-head"><view><text>微信资料</text><strong>用你的头像和昵称</strong></view><button class="sheet-close" bindtap="closeWechatProfile">×</button></view>
-    <button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-      <image wx:if="{{draftAvatarUrl}}" src="{{draftAvatarUrl}}" mode="aspectFill" />
-      <text wx:else>选择微信头像</text>
-    </button>
-    <text class="profile-tip">点击头像，选择“使用微信头像”</text>
-    <text class="field-label">微信昵称</text>
-    <input class="text-input nickname-input" type="nickname" value="{{draftNickname}}" bindinput="onNicknameInput" placeholder="点击选择微信昵称" />
-    <button class="primary-button save-wechat-profile" bindtap="saveWechatProfile">使用这份微信资料</button>
-  </view>
-</view>
+<view wx:if="{{showWechatProfile}}" class="sheet-overlay" bindtap="closeWechatProfile"><view class="bottom-sheet wechat-profile-sheet" catchtap="noop"><view class="sheet-head"><view><text>微信资料</text><strong>用你的头像和昵称</strong></view><button class="sheet-close" bindtap="closeWechatProfile">×</button></view><button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar"><image wx:if="{{draftAvatarUrl}}" src="{{draftAvatarUrl}}" mode="aspectFill" /><text wx:else>选择微信头像</text></button><text class="profile-tip">点击头像，选择“使用微信头像”</text><text class="field-label">微信昵称</text><input class="text-input nickname-input" type="nickname" value="{{draftNickname}}" bindinput="onNicknameInput" placeholder="点击选择微信昵称" /><button class="primary-button save-wechat-profile" bindtap="saveWechatProfile">使用这份微信资料</button></view></view>

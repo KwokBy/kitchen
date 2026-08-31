@@ -31,6 +31,8 @@ enum ApiError {
     Unauthorized,
     #[error("{0}")]
     NotFound(String),
+    #[error("{0}")]
+    Conflict(String),
     #[error("服务暂时不可用")]
     Internal,
 }
@@ -41,6 +43,7 @@ impl IntoResponse for ApiError {
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
             Self::Unauthorized => StatusCode::UNAUTHORIZED,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
+            Self::Conflict(_) => StatusCode::CONFLICT,
             Self::Internal => StatusCode::INTERNAL_SERVER_ERROR,
         };
         (
@@ -142,6 +145,11 @@ struct KitchenResponse {
     kitchen: KitchenView,
 }
 
+#[derive(Serialize)]
+struct OptionalKitchenResponse {
+    kitchen: Option<KitchenView>,
+}
+
 impl From<KitchenRow> for KitchenView {
     fn from(row: KitchenRow) -> Self {
         Self {
@@ -182,7 +190,7 @@ async fn main() {
     let app = Router::new()
         .route("/healthz", get(healthz))
         .route("/v1/auth/wechat", post(wechat_login))
-        .route("/v1/kitchens", post(create_kitchen))
+        .route("/v1/kitchens", get(current_kitchen).post(create_kitchen))
         .route("/v1/kitchens/join", post(join_kitchen))
         .with_state(state);
 
@@ -279,6 +287,21 @@ async fn create_kitchen(
     let kitchen_id = Uuid::new_v4();
     let invite_code = new_invite_code();
     let mut tx = state.pool.begin().await.map_err(internal)?;
+    sqlx::query("SELECT id FROM users WHERE id = $1 FOR UPDATE")
+        .bind(user_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
+    let has_kitchen = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(SELECT 1 FROM kitchen_members WHERE user_id = $1)",
+    )
+    .bind(user_id)
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(internal)?;
+    if has_kitchen {
+        return Err(ApiError::Conflict("每个人只能拥有一个厨房".to_owned()));
+    }
     sqlx::query(
         "INSERT INTO kitchens (id, name, invite_code, owner_user_id) VALUES ($1, $2, $3, $4)",
     )
@@ -307,6 +330,26 @@ async fn create_kitchen(
     }))
 }
 
+async fn current_kitchen(
+    State(state): State<AppState>,
+    AuthenticatedUser(user_id): AuthenticatedUser,
+) -> Result<Json<OptionalKitchenResponse>, ApiError> {
+    let row = sqlx::query_as::<_, KitchenRow>(
+        "SELECT k.id, k.name, k.invite_code, km.role, COUNT(all_members.user_id) AS member_count \
+         FROM kitchens k \
+         JOIN kitchen_members km ON km.kitchen_id = k.id AND km.user_id = $1 \
+         JOIN kitchen_members all_members ON all_members.kitchen_id = k.id \
+         GROUP BY k.id, km.role",
+    )
+    .bind(user_id)
+    .fetch_optional(&state.pool)
+    .await
+    .map_err(internal)?;
+    Ok(Json(OptionalKitchenResponse {
+        kitchen: row.map(Into::into),
+    }))
+}
+
 async fn join_kitchen(
     State(state): State<AppState>,
     AuthenticatedUser(user_id): AuthenticatedUser,
@@ -317,20 +360,45 @@ async fn join_kitchen(
     if code.len() != 6 {
         return Err(ApiError::BadRequest("邀请码应为 6 位".to_owned()));
     }
+    let mut tx = state.pool.begin().await.map_err(internal)?;
+    sqlx::query("SELECT id FROM users WHERE id = $1 FOR UPDATE")
+        .bind(user_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
+    let existing_kitchen =
+        sqlx::query_scalar::<_, Uuid>("SELECT kitchen_id FROM kitchen_members WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(internal)?;
+    if existing_kitchen.is_some() {
+        return Err(ApiError::Conflict(
+            "你已经有厨房了，不能再加入其他厨房".to_owned(),
+        ));
+    }
     let kitchen_id =
-        sqlx::query_scalar::<_, Uuid>("SELECT id FROM kitchens WHERE invite_code = $1")
+        sqlx::query_scalar::<_, Uuid>("SELECT id FROM kitchens WHERE invite_code = $1 FOR UPDATE")
             .bind(&code)
-            .fetch_optional(&state.pool)
+            .fetch_optional(&mut *tx)
             .await
             .map_err(internal)?
             .ok_or_else(|| ApiError::NotFound("邀请码无效".to_owned()))?;
+    let member_count =
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM kitchen_members WHERE kitchen_id = $1")
+            .bind(kitchen_id)
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(internal)?;
+    if member_count >= 2 {
+        return Err(ApiError::Conflict("这个厨房已经满员了".to_owned()));
+    }
     sqlx::query(
-        "INSERT INTO kitchen_members (kitchen_id, user_id, role) VALUES ($1, $2, 'member') \
-         ON CONFLICT (kitchen_id, user_id) DO NOTHING",
+        "INSERT INTO kitchen_members (kitchen_id, user_id, role) VALUES ($1, $2, 'member')",
     )
     .bind(kitchen_id)
     .bind(user_id)
-    .execute(&state.pool)
+    .execute(&mut *tx)
     .await
     .map_err(internal)?;
     let row = sqlx::query_as::<_, KitchenRow>(
@@ -342,9 +410,10 @@ async fn join_kitchen(
     )
     .bind(kitchen_id)
     .bind(user_id)
-    .fetch_one(&state.pool)
+    .fetch_one(&mut *tx)
     .await
     .map_err(internal)?;
+    tx.commit().await.map_err(internal)?;
     Ok(Json(KitchenResponse {
         kitchen: row.into(),
     }))
