@@ -3,7 +3,10 @@
   <view wx:if="{{dishes.length}}" class="meal-notice">已为今日食谱安排 {{dishes.length}} 道菜</view>
   <image class="menu-book" src="/assets/illustrations/menu-book.png" mode="aspectFit" />
   <view class="quick-actions"><button class="soft-button" bindtap="goMenu"><text class="quick-icon">✦</text><text>我想吃的</text></button><button class="is-active" bindtap="goHistory"><text>我烧过的</text></button></view>
-  <button wx:if="{{canRemindPicker}}" class="picker-reminder" bindtap="remindPicker"><text>还没想好吃什么？</text><strong>提醒{{pickerRoleName}}来点菜 →</strong></button>
+  <view class="kitchen-reminders">
+    <button wx:if="{{canRemindPicker}}" class="picker-reminder" bindtap="remindPicker"><view><text>还没想好吃什么？</text><strong>提醒{{pickerRoleName}}来点菜</strong></view><text class="reminder-arrow">发送提醒 →</text></button>
+    <button wx:if="{{canSubscribeWechat}}" class="wechat-subscribe" bindtap="subscribeWechat"><view><text>微信提醒</text><strong>接收搭档发来的下一条通知</strong></view><text>开启 →</text></button>
+  </view>
 
   <view wx:if="{{missedDishes.length}}" class="missed-card">
     <view class="missed-head"><view><small>计划有变化也没关系</small><strong>有 {{missedDishes.length}} 道菜那天没做</strong></view><text>未扣库存</text></view>

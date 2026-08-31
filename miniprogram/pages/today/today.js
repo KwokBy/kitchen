@@ -3,6 +3,7 @@ const { formatDate, addDays } = require('../../utils/date');
 const { consumeInventory } = require('../../utils/ingredients');
 const { planDatesOf, isPlannedOn, addPlanDate, removePlanDate } = require('../../utils/schedule');
 const notificationsService = require('../../services/notifications');
+const kitchenService = require('../../services/kitchen');
 
 function withPlate(dish) {
   const plate = dish.plate || 'sage';
@@ -10,10 +11,13 @@ function withPlate(dish) {
 }
 
 Page({
-  data: { dishes: [], tomorrowDishes: [], missedDishes: [], todayDate: '', tomorrowDate: '', history: [], dateText: '', notifications: [], unreadCount: 0, showNotifications: false, canRemindPicker: false, pickerRoleName: '点菜主力' },
-  onShow() {
+  data: { dishes: [], tomorrowDishes: [], missedDishes: [], todayDate: '', tomorrowDate: '', history: [], dateText: '', notifications: [], unreadCount: 0, showNotifications: false, canRemindPicker: false, canSubscribeWechat: false, pickerRoleName: '点菜主力' },
+  async onShow() {
     if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 0 });
-    const state = loadState();
+    let state = loadState();
+    if (getApp().globalData.backendMode === 'rust' && state.identity.bound) {
+      try { await kitchenService.refreshKitchen(); state = loadState(); } catch (_) {}
+    }
     const today = formatDate(new Date());
     const tomorrowDate = formatDate(addDays(new Date(), 1));
     const dishes = state.dishes.filter(dish => isPlannedOn(dish, today)).map(withPlate);
@@ -29,7 +33,8 @@ Page({
       tomorrowDate,
       history: state.history.slice(0, 4).map(item => ({ ...item, dish: state.dishes.find(dish => dish.id === item.dishId) })).filter(item => item.dish).map(item => ({ ...item, dish: withPlate(item.dish) })),
       dateText: new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date()),
-      canRemindPicker: !!state.kitchen && state.kitchen.role === 'owner' && state.kitchen.memberCount >= 2,
+      canRemindPicker: !!state.kitchen && state.kitchen.role === 'owner',
+      canSubscribeWechat: !!state.kitchen && state.identity.bound && getApp().globalData.backendMode === 'rust',
       pickerRoleName: state.kitchen && state.kitchen.memberRoleName ? state.kitchen.memberRoleName : '点菜主力'
     });
     this.refreshNotifications();
@@ -62,10 +67,18 @@ Page({
   onUnload() { this.setTabHidden(false); },
   async remindPicker() {
     try {
-      await notificationsService.remindPicker();
-      wx.showToast({ title: `已提醒${this.data.pickerRoleName}`, icon: 'success' });
+      const result = await notificationsService.remindPicker();
+      wx.showToast({ title: result.pushSent ? '微信提醒已发送' : '已发到厨房消息', icon: 'success' });
     } catch (error) {
       wx.showToast({ title: error.message || '提醒发送失败', icon: 'none' });
+    }
+  },
+  async subscribeWechat() {
+    try {
+      const accepted = await notificationsService.subscribeWechat();
+      wx.showToast({ title: accepted ? '下一条微信提醒已开启' : '你暂未允许微信提醒', icon: 'none' });
+    } catch (error) {
+      wx.showToast({ title: error.errMsg || '微信提醒开启失败', icon: 'none' });
     }
   },
   goMenu() {

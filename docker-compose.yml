@@ -25,6 +25,8 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5433/xiguifei_kitchen
       LISTEN_ADDR: 172.25.0.1:8787
+      WECHAT_SUBSCRIBE_TEMPLATE_ID: TRB0XLJlO3Dw0DQHs0B_jMEXYU9crlV6Wb8jpBpNA0A
+      WECHAT_MINIPROGRAM_STATE: trial
     network_mode: host
     depends_on:
       postgres:

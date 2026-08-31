@@ -22,6 +22,8 @@ struct AppState {
     http: reqwest::Client,
     wechat_app_id: String,
     wechat_app_secret: String,
+    wechat_subscribe_template_id: String,
+    wechat_miniprogram_state: String,
     jwt_secret: Arc<String>,
 }
 
@@ -212,7 +214,21 @@ struct NotificationView {
     dish_names: Vec<String>,
     sender_nickname: String,
     is_read: bool,
+    push_sent: bool,
     created_at: DateTime<Utc>,
+}
+
+#[derive(Deserialize)]
+struct WechatAccessTokenResponse {
+    access_token: Option<String>,
+    errcode: Option<i64>,
+    errmsg: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct WechatApiResponse {
+    errcode: i64,
+    errmsg: String,
 }
 
 #[derive(Serialize)]
@@ -270,6 +286,9 @@ async fn main() {
         http: reqwest::Client::new(),
         wechat_app_id: required_env("WECHAT_APP_ID"),
         wechat_app_secret: required_env("WECHAT_APP_SECRET"),
+        wechat_subscribe_template_id: env::var("WECHAT_SUBSCRIBE_TEMPLATE_ID").unwrap_or_default(),
+        wechat_miniprogram_state: env::var("WECHAT_MINIPROGRAM_STATE")
+            .unwrap_or_else(|_| "trial".to_owned()),
         jwt_secret: Arc::new(required_env("JWT_SECRET")),
     };
     let app = Router::new()
@@ -629,6 +648,7 @@ async fn list_notifications(
             dish_names: row.dish_names,
             sender_nickname: row.sender_nickname,
             is_read: row.read_at.is_some(),
+            push_sent: false,
             created_at: row.created_at,
         })
         .collect();
@@ -674,6 +694,12 @@ async fn create_notification(
     .await
     .map_err(internal)?
     .ok_or_else(|| ApiError::BadRequest("厨房里的另一位成员还没有加入".to_owned()))?;
+    let recipient_openid =
+        sqlx::query_scalar::<_, String>("SELECT openid FROM users WHERE id = $1")
+            .bind(recipient_user_id)
+            .fetch_one(&state.pool)
+            .await
+            .map_err(internal)?;
     let plan_date = match body.date {
         Some(value) => Some(
             NaiveDate::parse_from_str(value.trim(), "%Y-%m-%d")
@@ -719,6 +745,15 @@ async fn create_notification(
     .fetch_one(&state.pool)
     .await
     .map_err(internal)?;
+    let push_sent = send_wechat_subscription(
+        &state,
+        &recipient_openid,
+        &row.sender_nickname,
+        &row.kind,
+        row.plan_date,
+        &row.dish_names,
+    )
+    .await;
     Ok(Json(NotificationView {
         id: row.id,
         kind: row.kind,
@@ -726,8 +761,99 @@ async fn create_notification(
         dish_names: row.dish_names,
         sender_nickname: row.sender_nickname,
         is_read: false,
+        push_sent,
         created_at: row.created_at,
     }))
+}
+
+async fn send_wechat_subscription(
+    state: &AppState,
+    recipient_openid: &str,
+    sender_nickname: &str,
+    kind: &str,
+    plan_date: Option<NaiveDate>,
+    dish_names: &[String],
+) -> bool {
+    if state.wechat_subscribe_template_id.is_empty() {
+        return false;
+    }
+    let token_response = match state
+        .http
+        .get("https://api.weixin.qq.com/cgi-bin/token")
+        .query(&[
+            ("grant_type", "client_credential"),
+            ("appid", state.wechat_app_id.as_str()),
+            ("secret", state.wechat_app_secret.as_str()),
+        ])
+        .send()
+        .await
+    {
+        Ok(response) => match response.json::<WechatAccessTokenResponse>().await {
+            Ok(value) => value,
+            Err(error) => {
+                tracing::warn!(%error, "cannot decode WeChat access token response");
+                return false;
+            }
+        },
+        Err(error) => {
+            tracing::warn!(%error, "cannot request WeChat access token");
+            return false;
+        }
+    };
+    let Some(access_token) = token_response.access_token else {
+        tracing::warn!(errcode = ?token_response.errcode, errmsg = ?token_response.errmsg, "WeChat access token rejected");
+        return false;
+    };
+    let message = if kind == "menu_ready" {
+        let date = plan_date
+            .map(|value| value.format("%m/%d").to_string())
+            .unwrap_or_default();
+        format!("{date}菜单：{}", dish_names.join("、"))
+    } else {
+        "想和你一起选这几天吃什么".to_owned()
+    };
+    let now = Utc::now() + Duration::hours(8);
+    let body = serde_json::json!({
+        "touser": recipient_openid,
+        "template_id": state.wechat_subscribe_template_id,
+        "page": "pages/today/today",
+        "miniprogram_state": state.wechat_miniprogram_state,
+        "lang": "zh_CN",
+        "data": {
+            "thing1": { "value": truncate_chars(sender_nickname, 20) },
+            "thing2": { "value": truncate_chars(&message, 20) },
+            "time3": { "value": now.format("%Y年%m月%d日 %H:%M").to_string() }
+        }
+    });
+    let response = match state
+        .http
+        .post("https://api.weixin.qq.com/cgi-bin/message/subscribe/send")
+        .query(&[("access_token", access_token.as_str())])
+        .json(&body)
+        .send()
+        .await
+    {
+        Ok(response) => response,
+        Err(error) => {
+            tracing::warn!(%error, "cannot send WeChat subscription message");
+            return false;
+        }
+    };
+    match response.json::<WechatApiResponse>().await {
+        Ok(result) if result.errcode == 0 => true,
+        Ok(result) => {
+            tracing::info!(errcode = result.errcode, errmsg = %result.errmsg, "WeChat subscription message not delivered");
+            false
+        }
+        Err(error) => {
+            tracing::warn!(%error, "cannot decode WeChat subscription response");
+            false
+        }
+    }
+}
+
+fn truncate_chars(value: &str, max_chars: usize) -> String {
+    value.chars().take(max_chars).collect()
 }
 
 async fn read_notifications(
