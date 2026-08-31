@@ -2,8 +2,8 @@ use std::{env, net::SocketAddr, sync::Arc};
 
 use axum::{
     Json, Router,
-    extract::State,
-    http::{HeaderMap, StatusCode},
+    extract::{FromRequestParts, State, rejection::JsonRejection},
+    http::{StatusCode, request::Parts},
     response::{IntoResponse, Response},
     routing::{get, post},
 };
@@ -69,6 +69,31 @@ struct Claims {
     sub: Uuid,
     iat: usize,
     exp: usize,
+}
+
+struct AuthenticatedUser(Uuid);
+
+impl FromRequestParts<AppState> for AuthenticatedUser {
+    type Rejection = ApiError;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        let value = parts
+            .headers
+            .get("authorization")
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.strip_prefix("Bearer "))
+            .ok_or(ApiError::Unauthorized)?;
+        let claims = decode::<Claims>(
+            value,
+            &DecodingKey::from_secret(state.jwt_secret.as_bytes()),
+            &Validation::default(),
+        )
+        .map_err(|_| ApiError::Unauthorized)?;
+        Ok(Self(claims.claims.sub))
+    }
 }
 
 #[derive(Serialize)]
@@ -184,10 +209,12 @@ async fn healthz() -> &'static str {
 
 async fn wechat_login(
     State(state): State<AppState>,
-    Json(body): Json<WechatLoginRequest>,
+    body: Result<Json<WechatLoginRequest>, JsonRejection>,
 ) -> Result<Json<AuthResponse>, ApiError> {
-    if body.code.trim().is_empty() {
-        return Err(ApiError::BadRequest("缺少微信登录 code".to_owned()));
+    let Json(body) = body.map_err(invalid_json)?;
+    let code = body.code.trim();
+    if code.is_empty() || code.chars().count() > 128 {
+        return Err(ApiError::BadRequest("微信登录 code 格式无效".to_owned()));
     }
     let session = state
         .http
@@ -195,7 +222,7 @@ async fn wechat_login(
         .query(&[
             ("appid", state.wechat_app_id.as_str()),
             ("secret", state.wechat_app_secret.as_str()),
-            ("js_code", body.code.as_str()),
+            ("js_code", code),
             ("grant_type", "authorization_code"),
         ])
         .send()
@@ -205,11 +232,8 @@ async fn wechat_login(
         .await
         .map_err(internal)?;
     let openid = session.openid.ok_or_else(|| {
-        ApiError::BadRequest(
-            session
-                .errmsg
-                .unwrap_or_else(|| format!("微信登录失败（{}）", session.errcode.unwrap_or(-1))),
-        )
+        tracing::warn!(errcode = ?session.errcode, errmsg = ?session.errmsg, "WeChat login rejected");
+        ApiError::BadRequest("微信登录失败，请重新尝试".to_owned())
     })?;
     let user_id = Uuid::new_v4();
     let stored_id = sqlx::query_scalar::<_, Uuid>(
@@ -242,10 +266,10 @@ async fn wechat_login(
 
 async fn create_kitchen(
     State(state): State<AppState>,
-    headers: HeaderMap,
-    Json(body): Json<CreateKitchenRequest>,
+    AuthenticatedUser(user_id): AuthenticatedUser,
+    body: Result<Json<CreateKitchenRequest>, JsonRejection>,
 ) -> Result<Json<KitchenResponse>, ApiError> {
-    let user_id = authenticated_user(&state, &headers)?;
+    let Json(body) = body.map_err(invalid_json)?;
     let name = body.name.trim();
     if name.is_empty() || name.chars().count() > 40 {
         return Err(ApiError::BadRequest(
@@ -285,10 +309,10 @@ async fn create_kitchen(
 
 async fn join_kitchen(
     State(state): State<AppState>,
-    headers: HeaderMap,
-    Json(body): Json<JoinKitchenRequest>,
+    AuthenticatedUser(user_id): AuthenticatedUser,
+    body: Result<Json<JoinKitchenRequest>, JsonRejection>,
 ) -> Result<Json<KitchenResponse>, ApiError> {
-    let user_id = authenticated_user(&state, &headers)?;
+    let Json(body) = body.map_err(invalid_json)?;
     let code = body.invite_code.trim().to_uppercase();
     if code.len() != 6 {
         return Err(ApiError::BadRequest("邀请码应为 6 位".to_owned()));
@@ -326,19 +350,8 @@ async fn join_kitchen(
     }))
 }
 
-fn authenticated_user(state: &AppState, headers: &HeaderMap) -> Result<Uuid, ApiError> {
-    let value = headers
-        .get("authorization")
-        .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.strip_prefix("Bearer "))
-        .ok_or(ApiError::Unauthorized)?;
-    let claims = decode::<Claims>(
-        value,
-        &DecodingKey::from_secret(state.jwt_secret.as_bytes()),
-        &Validation::default(),
-    )
-    .map_err(|_| ApiError::Unauthorized)?;
-    Ok(claims.claims.sub)
+fn invalid_json(_: JsonRejection) -> ApiError {
+    ApiError::BadRequest("请求格式不正确".to_owned())
 }
 
 fn new_invite_code() -> String {

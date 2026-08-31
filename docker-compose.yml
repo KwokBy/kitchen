@@ -44,8 +44,11 @@ services:
       - "traefik.http.routers.kitchen-api-http.middlewares=kitchen-api-https"
       - "traefik.http.routers.kitchen-api-https.rule=Host(`glup.top`)"
       - "traefik.http.routers.kitchen-api-https.entrypoints=websecure"
+      - "traefik.http.routers.kitchen-api-https.middlewares=kitchen-api-security"
       - "traefik.http.routers.kitchen-api-https.tls=true"
       - "traefik.http.routers.kitchen-api-https.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.kitchen-api-security.headers.stsseconds=31536000"
+      - "traefik.http.middlewares.kitchen-api-security.headers.contenttypenosniff=true"
       - "traefik.http.services.kitchen-api.loadbalancer.server.port=8787"
     networks:
       - proxy
