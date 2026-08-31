@@ -1,0 +1,38 @@
+page {
+  --paper: #f3edda;
+  --paper-light: #fbf7eb;
+  --ink: #243b2e;
+  --ink-soft: #607263;
+  --tomato: #d85d3f;
+  --sage: #78907c;
+  --line: rgba(51, 73, 56, 0.16);
+  min-height: 100%;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+
+view, text, button, input, textarea, image, scroll-view, swiper, swiper-item {
+  box-sizing: border-box;
+}
+
+button::after { border: 0; }
+
+.page-shell { min-height: 100vh; padding: 28rpx 36rpx 52rpx; }
+.eyebrow { display: block; color: var(--ink-soft); font-size: 20rpx; font-weight: 600; letter-spacing: 4rpx; }
+.page-title { display: block; margin-top: 8rpx; font-family: STKaiti, KaiTi, serif; font-size: 48rpx; font-weight: 700; }
+.page-subtitle { display: block; margin-top: 8rpx; color: var(--ink-soft); font-size: 24rpx; line-height: 1.55; }
+.paper-card { border: 1rpx solid rgba(53, 70, 55, .08); border-radius: 36rpx; background: rgba(255,255,255,.38); }
+.primary-button, .soft-button { display: flex; align-items: center; justify-content: center; min-height: 88rpx; border-radius: 999rpx; font-size: 28rpx; }
+.primary-button { color: #fff; background: var(--ink); }
+.soft-button { color: var(--ink); background: rgba(255,255,255,.68); border: 1rpx solid var(--line); }
+.field-label { display: block; margin: 28rpx 0 12rpx; font-size: 24rpx; font-weight: 600; }
+.text-input, .text-area { width: 100%; border: 1rpx solid rgba(53,70,55,.08); border-radius: 999rpx; background: rgba(255,255,255,.72); }
+.text-input { height: 88rpx; padding: 0 28rpx; }
+.text-area { min-height: 180rpx; padding: 24rpx 28rpx; border-radius: 28rpx; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 14rpx; }
+.chip { padding: 16rpx 24rpx; border: 1rpx solid var(--line); border-radius: 999rpx; background: rgba(255,255,255,.55); font-size: 23rpx; }
+.chip.is-active { color: #fff; background: var(--sage); border-color: var(--sage); }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; margin: 34rpx 0 18rpx; }
+.section-head text:first-child { font-family: STKaiti, KaiTi, serif; font-size: 32rpx; font-weight: 700; }
+.section-head text:last-child { color: var(--ink-soft); font-size: 20rpx; }

@@ -1,0 +1,30 @@
+{
+  "pages": [
+    "pages/today/today",
+    "pages/menu/menu",
+    "pages/fridge/fridge",
+    "pages/profile/profile",
+    "pages/dish-edit/dish-edit"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#F3EDDA",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "熹贵妃的小厨房",
+    "backgroundColor": "#F3EDDA",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#607263",
+    "selectedColor": "#243B2E",
+    "backgroundColor": "#FBF7EB",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/today/today", "text": "今天" },
+      { "pagePath": "pages/menu/menu", "text": "菜单" },
+      { "pagePath": "pages/fridge/fridge", "text": "冰箱" },
+      { "pagePath": "pages/profile/profile", "text": "我的" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

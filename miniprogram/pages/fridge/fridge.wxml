@@ -1,0 +1,20 @@
+<view class="page-shell">
+  <text class="eyebrow">冰箱存货</text><text class="page-title">先吃快到期的</text><text class="page-subtitle">记下数量和日期，安排菜单时才知道还缺什么。</text>
+  <view class="fridge-summary"><view class="paper-card"><strong>{{items.length}}</strong><text>种存货</text></view><view class="paper-card warning"><strong>{{attentionCount}}</strong><text>种需要留意</text></view></view>
+  <button class="primary-button add-stock" bindtap="toggleEditor">{{showEditor ? '收起' : '＋ 记录存货'}}</button>
+  <form wx:if="{{showEditor}}" class="stock-form paper-card" bindsubmit="addStock">
+    <text class="field-label">食材名字</text><input class="text-input" name="name" placeholder="例如：番茄" />
+    <text class="field-label">还有多少</text><input class="text-input" name="quantity" placeholder="例如：3个 / 500克" />
+    <text class="field-label">到期日期</text><picker mode="date" value="{{defaultExpiry}}" bindchange="onExpiryChange"><view class="date-picker">{{defaultExpiry}}</view></picker><input hidden name="expiryDate" value="{{defaultExpiry}}" />
+    <button class="primary-button" form-type="submit">保存存货</button>
+  </form>
+  <view class="stock-list">
+    <view class="stock-row paper-card" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindlongpress="removeStock"><view class="stock-icon">鲜</view><view class="stock-copy"><strong>{{item.name}}</strong><text>还有 {{item.quantity}} · {{item.expiryDate}}</text></view><text class="expiry {{item.status.tone}}">{{item.status.text}}</text></view>
+  </view>
+
+  <view class="section-head"><text>本周菜篮子</text><text>{{missingCount}} 种待采购</text></view>
+  <view wx:if="{{basketItems.length}}" class="basket-card paper-card">
+    <view class="basket-row" wx:for="{{basketItems}}" wx:key="name"><view class="basket-check {{item.inFridge ? 'done' : ''}}">{{item.inFridge ? '✓' : '买'}}</view><view><strong>{{item.name}} · {{item.needText}}</strong><small>用于 {{item.dishText}}</small></view><text>{{item.inFridge ? '冰箱已有' : '还要准备'}}</text></view>
+  </view>
+  <view wx:else class="basket-empty paper-card">先去菜单把想吃的菜安排到这几天，食材会自动汇总到这里。</view>
+</view>

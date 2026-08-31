@@ -1,0 +1,25 @@
+.menu-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18rpx; }
+.menu-heading .page-title { display: block; }
+.wish-label { color: #607263; font-family: STKaiti, KaiTi, serif; font-size: 24rpx; }
+.menu-stage { display: grid; grid-template-columns: 190rpx 1fr; align-items: center; min-height: 570rpx; margin: 0 -36rpx; overflow: hidden; }
+.dish-name-list { z-index: 2; height: 460rpx; padding-left: 36rpx; }
+.dish-name { display: block; padding: 11rpx 0; color: rgba(36,59,46,.4); font-family: STKaiti, KaiTi, serif; font-size: 27rpx; }
+.dish-name.is-active { color: #78907c; font-size: 30rpx; font-weight: 700; transform: translateX(12rpx); }
+.round-table { position: relative; width: 570rpx; height: 570rpx; border-radius: 50%; background: repeating-linear-gradient(0deg, transparent 0 38rpx, rgba(68,96,65,.3) 38rpx 74rpx), repeating-linear-gradient(90deg, rgba(176,91,64,.34) 0 37rpx, rgba(245,239,215,.5) 37rpx 74rpx); box-shadow: inset 0 0 0 16rpx rgba(255,255,255,.22), 0 28rpx 54rpx rgba(55,60,50,.17); transform: translateX(-8rpx); }
+.selected-plate { position: absolute; left: 50%; top: 50%; width: 286rpx; height: 286rpx; border: 20rpx solid rgba(251,247,235,.9); border-radius: 50%; box-shadow: 0 28rpx 44rpx rgba(48,52,45,.27); transform: translate(-50%, -50%); }
+.selected-copy { margin-top: -12rpx; text-align: center; }
+.selected-copy text { display: block; font-family: STKaiti, KaiTi, serif; font-size: 38rpx; font-weight: 700; }
+.selected-copy small { display: block; margin-top: 8rpx; color: #607263; font-size: 21rpx; }
+.menu-actions { display: flex; flex-direction: column; margin-top: 22rpx; }
+.menu-actions button { width: 100%; margin-top: 12rpx; }
+.menu-actions .add { width: 280rpx; }
+.remove-button { min-height: 78rpx; color: #d85d3f; background: transparent; font-size: 25rpx; }
+.week-strip { width: 100%; white-space: nowrap; }
+.day-card { display: inline-flex; flex-direction: column; align-items: center; width: 170rpx; min-height: 220rpx; margin-right: 12rpx; padding: 18rpx 10rpx; border-radius: 28rpx; background: rgba(255,255,255,.42); }
+.day-card > text { color: #607263; font-size: 20rpx; }
+.day-card image, .day-plus { width: 100rpx; height: 100rpx; margin: 12rpx 0; border-radius: 50%; }
+.day-card image { border: 8rpx solid rgba(255,255,255,.8); }
+.day-plus { display: flex; align-items: center; justify-content: center; border: 2rpx dashed rgba(53,70,55,.2); color: #607263; font-size: 34rpx; }
+.day-card small { max-width: 150rpx; overflow: hidden; font-family: STKaiti, KaiTi, serif; font-size: 22rpx; text-overflow: ellipsis; }
+.day-card em { margin-top: 5rpx; color: #d85d3f; font-size: 18rpx; font-style: normal; }
+.empty-menu { padding: 80rpx 20rpx; text-align: center; }

@@ -1,0 +1,24 @@
+<view class="page-shell today-page">
+  <text class="eyebrow">{{dateText}}</text>
+  <view class="brand-row">
+    <view><text class="brand-title">熹贵妃的小厨房</text><text class="brand-copy">两个人，好好吃饭</text></view>
+    <image class="brand-illustration" src="/assets/kitchen-pals.png" mode="aspectFit" />
+  </view>
+
+  <view class="section-head"><text>今日菜单</text><text wx:if="{{dishes.length > 1}}">{{dishes.length}} 道 · 左右滑动</text><text wx:else>{{dishes.length ? '已经有主意了' : '还没安排'}}</text></view>
+  <view class="today-board paper-card">
+    <swiper wx:if="{{dishes.length}}" class="dish-swiper" indicator-dots="{{dishes.length > 1}}" indicator-color="rgba(36,59,46,.2)" indicator-active-color="#D85D3F">
+      <swiper-item wx:for="{{dishes}}" wx:key="id">
+        <view class="dish-slide"><image src="{{item.image}}" mode="aspectFill" /><text>{{item.name}}</text><small>{{item.note}}</small></view>
+      </swiper-item>
+    </swiper>
+    <view wx:else class="empty-today"><text>今天还没安排菜</text><small>先去菜单挑一道想吃的</small></view>
+    <view class="today-actions"><button class="primary-button" bindtap="goMenu">去点菜</button><button wx:if="{{dishes.length}}" class="soft-button" bindtap="startMeal">今天就吃这些</button></view>
+  </view>
+
+  <view class="section-head"><text>最近吃过</text><text>每一顿都算数</text></view>
+  <scroll-view scroll-x class="history-row">
+    <view class="history-item" wx:for="{{history}}" wx:key="id"><image src="{{item.dish.image}}" mode="aspectFill" /><text>{{item.dish.name}}</text></view>
+    <view wx:if="{{!history.length}}" class="history-empty">吃完第一顿，它会出现在这里。</view>
+  </scroll-view>
+</view>

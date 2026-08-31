@@ -1,0 +1,19 @@
+<view class="page-shell menu-page">
+  <view class="menu-heading"><view><text class="eyebrow">已有菜单</text><text class="page-title">这就是我们的实力</text></view><text class="wish-label">♡ 想吃的菜</text></view>
+
+  <view wx:if="{{selectedDish}}" class="menu-stage">
+    <scroll-view scroll-y class="dish-name-list">
+      <text wx:for="{{dishes}}" wx:key="id" class="dish-name {{index === selectedIndex ? 'is-active' : ''}}" data-index="{{index}}" bindtap="selectDish">{{item.name}}</text>
+    </scroll-view>
+    <view class="round-table"><image class="selected-plate" src="{{selectedDish.image}}" mode="aspectFill" /></view>
+  </view>
+  <view wx:else class="empty-menu paper-card">还没有菜，先新增第一道。</view>
+
+  <view wx:if="{{selectedDish}}" class="selected-copy"><text>{{selectedDish.name}}</text><small>♥ {{selectedDish.wishText}}{{selectedDish.planDate ? ' · 已安排' : ''}}</small><small wx:if="{{selectedDish.note}}">{{selectedDish.note}}</small></view>
+  <view class="menu-actions"><button class="soft-button add" bindtap="addDish">＋ 新增</button><button class="primary-button" bindtap="arrangeDish">安排</button><button class="soft-button" bindtap="editDish">编辑</button><button class="remove-button" bindtap="removeDish">移出</button></view>
+
+  <view class="section-head"><text>这几天吃什么</text><text>她也可以来安排</text></view>
+  <scroll-view scroll-x class="week-strip">
+    <view class="day-card" wx:for="{{weekDays}}" wx:key="value" data-date="{{item.value}}" bindtap="openDay"><text>{{item.label}}</text><image wx:if="{{item.dishes.length}}" src="{{item.dishes[0].image}}" mode="aspectFill" /><view wx:else class="day-plus">＋</view><small>{{item.dishes.length ? item.dishes[0].name : '还没安排'}}</small><em wx:if="{{item.dishes.length > 1}}">点开看另外 {{item.dishes.length - 1}} 道</em></view>
+  </scroll-view>
+</view>

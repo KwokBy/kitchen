@@ -1,0 +1,4 @@
+{
+  "desc": "熹贵妃的小厨房",
+  "rules": [{ "action": "allow", "page": "*" }]
+}

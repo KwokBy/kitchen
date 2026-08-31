@@ -1,0 +1,37 @@
+<view class="page-shell editor-page">
+  <text class="eyebrow">一道一道来</text>
+  <text class="page-title">{{title}}</text>
+  <text class="page-subtitle">每次只编辑一道菜，保存后再继续添加。</text>
+
+  <form bindsubmit="saveDish">
+    <view class="dish-preview" bindtap="chooseImage">
+      <view class="preview-table"><image src="{{image}}" mode="aspectFill" /></view>
+      <text>点击换一张菜图</text>
+    </view>
+
+    <text class="field-label">菜名</text>
+    <input class="text-input" name="name" value="{{name}}" placeholder="例如：番茄炒蛋" />
+
+    <text class="field-label">属于哪一类</text>
+    <picker mode="selector" range="{{categories}}" value="{{categoryIndex}}" bindchange="onCategoryChange">
+      <view class="picker-field">{{categories[categoryIndex]}}<text>⌄</text></view>
+    </picker>
+
+    <text class="field-label">谁想吃</text>
+    <view class="wanted-row">
+      <view class="wanted-card {{meWanted ? 'is-active' : ''}}" data-person="me" bindtap="toggleWanted"><text>我</text><small>我想吃</small></view>
+      <view class="wanted-card partner {{partnerWanted ? 'is-active' : ''}}" data-person="partner" bindtap="toggleWanted"><text>她</text><small>她想吃</small></view>
+    </view>
+
+    <text class="field-label">安排到哪天（可选）</text>
+    <view class="date-row"><picker mode="date" value="{{planDate}}" start="{{today}}" bindchange="onPlanDateChange"><view class="picker-field">{{planDate || '暂不安排'}}<text>⌄</text></view></picker><text wx:if="{{planDate}}" bindtap="clearPlanDate">清除</text></view>
+
+    <text class="field-label">做菜备注</text>
+    <input class="text-input" name="note" value="{{note}}" placeholder="例如：少辣，多一点汁" />
+
+    <text class="field-label">需要哪些食材</text>
+    <textarea class="text-area" name="ingredients" value="{{ingredientsText}}" placeholder="每行一种，例如：&#10;番茄 3个&#10;鸡蛋 4个" />
+
+    <button class="primary-button save-button" form-type="submit">保存这道菜</button>
+  </form>
+</view>

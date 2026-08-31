@@ -1,0 +1,28 @@
+.fridge-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 18rpx; margin: 30rpx 0 20rpx; }
+.fridge-summary view { padding: 25rpx; }
+.fridge-summary strong { display: block; font-family: monospace; font-size: 54rpx; }
+.fridge-summary text { color: #607263; font-size: 20rpx; }
+.fridge-summary .warning strong { color: #d85d3f; }
+.add-stock { margin-bottom: 20rpx; }
+.stock-form { margin-bottom: 22rpx; padding: 24rpx; }
+.date-picker { display: flex; align-items: center; height: 88rpx; padding: 0 28rpx; border-radius: 999rpx; background: rgba(255,255,255,.72); }
+.stock-form .primary-button { margin-top: 28rpx; }
+.stock-list { display: flex; flex-direction: column; }
+.stock-row { display: grid; grid-template-columns: 76rpx 1fr auto; align-items: center; margin-bottom: 14rpx; padding: 20rpx; }
+.stock-icon { display: flex; align-items: center; justify-content: center; width: 68rpx; height: 68rpx; border-radius: 50%; background: rgba(120,144,124,.16); font-family: STKaiti, KaiTi, serif; }
+.stock-copy strong, .stock-copy text { display: block; }
+.stock-copy strong { font-family: STKaiti, KaiTi, serif; font-size: 28rpx; }
+.stock-copy text { margin-top: 6rpx; color: #607263; font-size: 20rpx; }
+.expiry { padding: 8rpx 12rpx; border-radius: 999rpx; background: rgba(120,144,124,.14); font-size: 18rpx; }
+.expiry.soon { color: #9a3d26; background: rgba(216,93,63,.15); }
+.expiry.expired { color: white; background: #d85d3f; }
+.basket-card { padding: 8rpx 22rpx; }
+.basket-row { display: grid; grid-template-columns: 64rpx 1fr auto; align-items: center; gap: 14rpx; padding: 20rpx 0; border-bottom: 1rpx solid rgba(53,70,55,.1); }
+.basket-row:last-child { border-bottom: 0; }
+.basket-check { display: flex; align-items: center; justify-content: center; width: 58rpx; height: 58rpx; border-radius: 50%; color: #fff; background: #d85d3f; font-size: 20rpx; }
+.basket-check.done { background: #78907c; }
+.basket-row strong, .basket-row small { display: block; }
+.basket-row strong { font-size: 24rpx; }
+.basket-row small { margin-top: 6rpx; color: #607263; font-size: 19rpx; }
+.basket-row > text { color: #607263; font-size: 19rpx; }
+.basket-empty { padding: 38rpx 26rpx; color: #607263; font-size: 22rpx; line-height: 1.6; text-align: center; }
