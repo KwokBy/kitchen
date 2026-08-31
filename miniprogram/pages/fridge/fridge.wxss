@@ -6,6 +6,8 @@
 .add-stock { margin-bottom: 20rpx; }
 .date-picker { display: flex; align-items: center; height: 88rpx; padding: 0 28rpx; border-radius: 999rpx; background: rgba(255,255,255,.72); }
 .stock-sheet .primary-button { margin-top: 28rpx; }
+.stock-sheet { max-height: calc(100vh - 28rpx); }
+.stock-sheet-actions { position: sticky; z-index: 2; bottom: 0; padding-top: 2rpx; background: linear-gradient(transparent, #fbf7eb 18rpx); }
 .stock-list { display: flex; flex-direction: column; }
 .stock-row { display: grid; grid-template-columns: 76rpx 1fr auto; align-items: center; margin-bottom: 14rpx; padding: 20rpx; }
 .stock-icon { display: flex; align-items: center; justify-content: center; width: 68rpx; height: 68rpx; border-radius: 50%; background: rgba(120,144,124,.16); font-family: STKaiti, KaiTi, serif; }

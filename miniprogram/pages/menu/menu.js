@@ -75,7 +75,7 @@ Page({
       : Math.max(this.data.selectedIndex - 1, 0);
     this.animateSelection(nextIndex);
   },
-  onUnload() { clearTimeout(this.menuMotionTimer); },
+  onUnload() { clearTimeout(this.menuMotionTimer); this.setTabHidden(false); },
   setTabHidden(hidden) { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ hidden }); },
   addDish() { this.setTabHidden(true); this.setData({ showAddChoice: true, addChoiceDate: '' }); },
   chooseExistingDish() {

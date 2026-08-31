@@ -20,9 +20,9 @@
 <view wx:if="{{showEditor}}" class="sheet-overlay" bindtap="closeEditor">
   <form class="bottom-sheet stock-sheet" bindsubmit="saveStock" catchtap="noop">
     <view class="sheet-head"><view><text>冰箱存货</text><strong>{{editingStockId ? '编辑这份存货' : '放进冰箱'}}</strong></view><button class="sheet-close" bindtap="closeEditor">×</button></view>
-    <text class="field-label">食材名字</text><input class="text-input" name="name" value="{{stockName}}" placeholder="例如：番茄" />
-    <text class="field-label">还有多少</text><input class="text-input" name="quantity" value="{{stockQuantity}}" placeholder="例如：3个 / 500克" />
+    <text class="field-label">食材名字</text><input class="text-input" name="name" value="{{stockName}}" adjust-position="{{true}}" cursor-spacing="24" placeholder="例如：番茄" />
+    <text class="field-label">还有多少</text><input class="text-input" name="quantity" value="{{stockQuantity}}" adjust-position="{{true}}" cursor-spacing="24" placeholder="例如：3个 / 500克" />
     <text class="field-label">什么时候到期</text><picker mode="date" value="{{defaultExpiry}}" bindchange="onExpiryChange"><view class="date-picker">{{defaultExpiry}}</view></picker><input hidden name="expiryDate" value="{{defaultExpiry}}" />
-    <button class="primary-button" form-type="submit">{{editingStockId ? '保存修改' : '保存这份存货'}}</button><button wx:if="{{editingStockId}}" class="delete-stock" data-id="{{editingStockId}}" bindtap="removeStock">删除这份存货</button>
+    <view class="stock-sheet-actions"><button class="primary-button" form-type="submit">{{editingStockId ? '保存修改' : '保存这份存货'}}</button><button wx:if="{{editingStockId}}" class="delete-stock" data-id="{{editingStockId}}" bindtap="removeStock">删除这份存货</button></view>
   </form>
 </view>

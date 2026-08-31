@@ -13,7 +13,7 @@ function status(expiryDate) {
 
 Page({
   data: { items: [], basketDays: [], missingCount: 0, attentionCount: 0, showEditor: false, editingStockId: '', stockName: '', stockQuantity: '', defaultExpiry: '' },
-  onShow() { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 1 }); this.refresh(); },
+  onShow() { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 1, hidden: false }); this.refresh(); },
   refresh() {
     const state = loadState();
     const items = state.inventory.map(item => ({ ...item, status: status(item.expiryDate) })).sort((a, b) => a.expiryDate.localeCompare(b.expiryDate));
@@ -23,13 +23,16 @@ Page({
     const missingCount = basketDays.reduce((total, day) => total + day.missingCount, 0);
     this.setData({ items, basketDays, missingCount, attentionCount, defaultExpiry: this.data.showEditor ? this.data.defaultExpiry : formatDate(addDays(new Date(), 3)) });
   },
-  openEditor() { this.setData({ showEditor: true, editingStockId: '', stockName: '', stockQuantity: '', defaultExpiry: formatDate(addDays(new Date(), 3)) }); },
+  setTabHidden(hidden) { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ hidden }); },
+  openEditor() { this.setTabHidden(true); this.setData({ showEditor: true, editingStockId: '', stockName: '', stockQuantity: '', defaultExpiry: formatDate(addDays(new Date(), 3)) }); },
   editStock(event) {
     const item = this.data.items.find(entry => entry.id === event.currentTarget.dataset.id);
     if (!item) return;
+    this.setTabHidden(true);
     this.setData({ showEditor: true, editingStockId: item.id, stockName: item.name, stockQuantity: item.quantity, defaultExpiry: item.expiryDate });
   },
-  closeEditor() { this.setData({ showEditor: false }); },
+  closeEditor() { this.setTabHidden(false); this.setData({ showEditor: false }); },
+  onUnload() { this.setTabHidden(false); },
   noop() {},
   onExpiryChange(event) { this.setData({ defaultExpiry: event.detail.value }); },
   saveStock(event) {
@@ -44,6 +47,7 @@ Page({
       if (index >= 0) state.inventory[index] = stock;
       else state.inventory.push(stock);
     });
+    this.setTabHidden(false);
     this.setData({ showEditor: false });
     this.refresh();
     wx.showToast({ title: this.data.editingStockId ? '存货已更新' : '已放进冰箱', icon: 'success' });
@@ -54,6 +58,7 @@ Page({
     wx.showModal({ title: `用完${item.name}了？`, content: '确认后会从冰箱库存移除。', success: ({ confirm }) => {
       if (!confirm) return;
       updateState(state => { state.inventory = state.inventory.filter(entry => entry.id !== id); });
+      this.setTabHidden(false);
       this.setData({ showEditor: false });
       this.refresh();
     }});

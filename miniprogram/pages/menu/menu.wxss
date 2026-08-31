@@ -57,11 +57,11 @@
 .sheet-dish strong, .sheet-dish small { display: block; }
 .sheet-dish strong { font-family: STKaiti, KaiTi, serif; font-size: 30rpx; }
 .sheet-dish small { margin-top: 5rpx; color: #607263; font-size: 20rpx; }
-.picker-sheet { overflow: hidden; }
+.picker-sheet { display: flex; flex-direction: column; max-height: calc(100vh - 28rpx); overflow: hidden; }
 .picker-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10rpx; width: 100%; }
 .picker-filters > view { display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; min-height: 66rpx; padding: 0 6rpx; border: 1rpx solid rgba(53,70,55,.13); border-radius: 999rpx; color: #607263; background: rgba(255,255,255,.62); font-size: 20rpx; }
 .picker-filters > view.is-active { color: white; border-color: #243b2e; background: #243b2e; }
-.picker-grid-scroll { height: 390rpx; margin: 20rpx 0 4rpx; }
+.picker-grid-scroll { flex: 1 1 auto; height: 34vh; min-height: 240rpx; max-height: 390rpx; margin: 20rpx 0 4rpx; }
 .picker-scroll-hint { margin-bottom: 8rpx; color: #78907c; font-size: 18rpx; text-align: center; }
 .picker-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14rpx; padding-bottom: 8rpx; }
 .picker-card { position: relative; display: flex; align-items: center; min-width: 0; min-height: 118rpx; padding: 12rpx; border: 2rpx solid transparent; border-radius: 28rpx; background: rgba(255,255,255,.52); }

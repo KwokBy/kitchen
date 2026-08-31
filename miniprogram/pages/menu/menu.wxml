@@ -50,7 +50,7 @@
       </view>
     </scroll-view>
     <view wx:if="{{pickerDishes.length > 6}}" class="picker-scroll-hint">↑ 上滑查看更多</view>
-    <view wx:else class="picker-empty">这个筛选里还没有菜</view>
+    <view wx:if="{{!pickerDishes.length}}" class="picker-empty">这个筛选里还没有菜</view>
     <text class="picker-date-label">安排到哪一天</text>
     <view class="date-chips"><view wx:for="{{dateOptions}}" wx:key="value" class="date-chip {{pickerDate === item.value ? 'is-active' : ''}}" data-date="{{item.value}}" bindtap="choosePickerDate">{{item.label}}</view></view>
     <button class="primary-button" disabled="{{!pickerSelectedIds.length}}" bindtap="confirmPicker">{{pickerSelectedIds.length ? '安排 ' + pickerSelectedIds.length + ' 道菜进菜单' : '先选择想吃的菜'}}</button>
