@@ -1,0 +1,12 @@
+[Unit]
+Description=Restore outbound networking for the existing Traefik Docker network
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/xiguifei-kitchen/deploy/ensure-proxy-egress.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
