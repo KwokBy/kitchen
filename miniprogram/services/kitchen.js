@@ -12,11 +12,11 @@ async function bindIdentity() {
     const response = await request('/v1/auth/wechat', { method: 'POST', data: { code: login.code } });
     saveToken(response.token);
     return updateState(state => {
-      state.identity = { bound: true, openid: response.user.id, nickname: state.profile.meName };
+      state.identity = { ...state.identity, bound: true, openid: response.user.id };
     });
   }
   return updateState(state => {
-    state.identity = { bound: true, openid: 'demo-openid', nickname: state.profile.meName };
+    state.identity = { ...state.identity, bound: true, openid: 'demo-openid' };
   });
 }
 

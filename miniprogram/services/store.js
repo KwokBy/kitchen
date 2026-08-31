@@ -9,6 +9,11 @@ function loadState() {
     wx.setStorageSync(STORAGE_KEY, initial);
     return initial;
   }
+  if ((saved.version || 1) < 2 || !saved.identity || typeof saved.identity.avatarUrl !== 'string' || typeof saved.identity.profileComplete !== 'boolean') {
+    saved.version = 2;
+    saved.identity = { bound: false, openid: '', nickname: '', avatarUrl: '', profileComplete: false, ...(saved.identity || {}) };
+    wx.setStorageSync(STORAGE_KEY, saved);
+  }
   return saved;
 }
 

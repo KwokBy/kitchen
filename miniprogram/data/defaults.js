@@ -5,9 +5,9 @@ function createDefaults() {
   const choices = dateChoices();
   const saturday = choices.find(item => item.label === '周六');
   return {
-    version: 1,
+    version: 2,
     profile: { homeName: '熹贵妃的小厨房', meName: '我', partnerName: '她', meRole: '做饭主力', partnerRole: '点菜主力' },
-    identity: { bound: false, openid: '', nickname: '' },
+    identity: { bound: false, openid: '', nickname: '', avatarUrl: '', profileComplete: false },
     kitchen: null,
     categories: ['荤菜', '素菜', '汤羹', '小吃', '主食'],
     dishes: [
