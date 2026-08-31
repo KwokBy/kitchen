@@ -62,4 +62,52 @@ function compareIngredients(lines, inventory) {
   return buildBasket([{ name: '这道菜', ingredients: lines }], inventory);
 }
 
-module.exports = { parseAmount, parseRequirement, buildBasket, compareIngredients };
+function consumeInventory(inventory, dishes, options = {}) {
+  const next = inventory.map(item => ({ ...item }));
+  const needs = {};
+  dishes.forEach(dish => (dish.ingredients || []).forEach(text => {
+    const requirement = parseRequirement(text);
+    if (!requirement.name || requirement.amount === null) return;
+    const key = `${requirement.name}\n${requirement.unit}`;
+    if (!needs[key]) needs[key] = { name: requirement.name, unit: requirement.unit, amount: 0 };
+    needs[key].amount += requirement.amount;
+  }));
+
+  const shortages = [];
+  Object.values(needs).forEach(need => {
+    let left = need.amount;
+    next
+      .map((item, index) => ({ item, index, parsed: parseAmount(item.quantity) }))
+      .filter(entry => entry.item.name === need.name && entry.parsed && entry.parsed.unit === need.unit && (!options.usableOn || !entry.item.expiryDate || entry.item.expiryDate >= options.usableOn))
+      .sort((a, b) => String(a.item.expiryDate || '').localeCompare(String(b.item.expiryDate || '')))
+      .forEach(entry => {
+        if (left <= 0) return;
+        const used = Math.min(left, entry.parsed.amount);
+        left -= used;
+        const remaining = entry.parsed.amount - used;
+        next[entry.index].quantity = `${formatAmount(remaining)}${need.unit}`;
+        next[entry.index]._empty = remaining <= 0;
+      });
+    if (left > 0) shortages.push(`${need.name} ${formatAmount(left)}${need.unit}`);
+  });
+  return { inventory: next.filter(item => !item._empty).map(({ _empty, ...item }) => item), shortages };
+}
+
+function buildDailyBaskets(dishes, inventory, days) {
+  let remainingInventory = inventory.map(item => ({ ...item }));
+  return [...days].sort((a, b) => a.value.localeCompare(b.value)).map(day => {
+    const dayDishes = dishes.filter(dish => dish.planDate === day.value);
+    const usableInventory = remainingInventory.filter(item => !item.expiryDate || item.expiryDate >= day.value);
+    const ingredients = buildBasket(dayDishes, usableInventory);
+    remainingInventory = consumeInventory(remainingInventory, dayDishes, { usableOn: day.value }).inventory;
+    return {
+      ...day,
+      dishes: dayDishes,
+      dishText: dayDishes.map(dish => dish.name).join('、'),
+      ingredients,
+      missingCount: ingredients.filter(item => item.tone !== 'enough').length
+    };
+  }).filter(day => day.dishes.length);
+}
+
+module.exports = { parseAmount, parseRequirement, buildBasket, compareIngredients, consumeInventory, buildDailyBaskets };

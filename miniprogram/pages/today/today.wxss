@@ -6,6 +6,18 @@
 .quick-actions button text { display: block; line-height: 1; }
 .quick-actions .quick-icon { font-size: 25rpx; }
 .quick-actions button.is-active { color: white; background: #617b6b; }
+.missed-card { margin-top: 18rpx; padding: 20rpx 22rpx; border: 2rpx solid rgba(216,93,63,.16); border-radius: 30rpx; background: rgba(216,93,63,.06); }
+.missed-head { display: flex; align-items: center; justify-content: space-between; }
+.missed-head small, .missed-head strong { display: block; }
+.missed-head small { color: #607263; font-size: 17rpx; }
+.missed-head strong { margin-top: 4rpx; font-family: STKaiti, KaiTi, serif; font-size: 27rpx; }
+.missed-head > text { padding: 8rpx 12rpx; border-radius: 999rpx; color: #c74f35; background: rgba(216,93,63,.1); font-size: 16rpx; }
+.missed-row { display: grid; grid-template-columns: minmax(0, 1fr) 92rpx 92rpx; align-items: center; gap: 8rpx; padding-top: 16rpx; margin-top: 16rpx; border-top: 1rpx solid rgba(216,93,63,.13); }
+.missed-row strong, .missed-row small { display: block; }
+.missed-row strong { font-family: STKaiti, KaiTi, serif; font-size: 24rpx; }
+.missed-row small { margin-top: 3rpx; color: #607263; font-size: 17rpx; }
+.missed-row button { width: 92rpx; min-height: 50rpx; margin: 0; padding: 0; border-radius: 999rpx; color: #607263; background: rgba(255,255,255,.62); font-size: 17rpx; line-height: 50rpx; }
+.missed-row button.today { color: #fff; background: #78907c; }
 .today-section-head { margin-top: 22rpx; }
 .today-board { overflow: hidden; margin: 0 -36rpx; padding: 20rpx 36rpx; background: #d8d2bd; background-image: linear-gradient(90deg, rgba(255,255,255,.22), rgba(97,123,107,.08)), repeating-linear-gradient(0deg, transparent 0 28rpx, rgba(255,255,255,.15) 28rpx 30rpx); }
 .today-dish-scroll { width: 100%; white-space: nowrap; }

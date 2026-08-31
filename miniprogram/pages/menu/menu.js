@@ -15,7 +15,7 @@ Page({
     plannedCount: 0, showArrange: false, arrangeDate: '', showPicker: false,
     pickerMode: 'all', pickerDishes: [], pickerSelectedIds: [],
     pickerDate: '', showDay: false, activeDay: { label: '', value: '', dishes: [] },
-    tableMotion: '', plateMotion: '', showAddChoice: false, addChoiceDate: '', menuTouchStartX: 0
+    tableMotion: '', plateMotion: '', showAddChoice: false, addChoiceDate: '', menuTouchStartY: 0
   },
   onShow() {
     if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 2, hidden: false });
@@ -61,12 +61,12 @@ Page({
   },
   onMenuTouchStart(event) {
     const touch = event.touches && event.touches[0];
-    if (touch) this.setData({ menuTouchStartX: touch.clientX });
+    if (touch) this.setData({ menuTouchStartY: touch.clientY });
   },
   onMenuTouchEnd(event) {
     const touch = event.changedTouches && event.changedTouches[0];
     if (!touch || this.data.dishes.length < 2) return;
-    const distance = touch.clientX - this.data.menuTouchStartX;
+    const distance = touch.clientY - this.data.menuTouchStartY;
     if (Math.abs(distance) < 45) return;
     const nextIndex = distance < 0
       ? Math.min(this.data.selectedIndex + 1, this.data.dishes.length - 1)

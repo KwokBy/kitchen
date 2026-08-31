@@ -3,22 +3,26 @@
   <view class="fridge-summary"><view class="paper-card"><strong>{{items.length}}</strong><text>种存货</text></view><view class="paper-card warning"><strong>{{attentionCount}}</strong><text>种需要留意</text></view></view>
   <button class="primary-button add-stock" bindtap="openEditor">＋ 记录存货</button>
   <view class="stock-list">
-    <view class="stock-row paper-card" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindlongpress="removeStock"><view class="stock-icon">鲜</view><view class="stock-copy"><strong>{{item.name}}</strong><text>还有 {{item.quantity}} · {{item.expiryDate}}</text></view><text class="expiry {{item.status.tone}}">{{item.status.text}}</text></view>
+    <view class="stock-row paper-card" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindtap="editStock"><view class="stock-icon">鲜</view><view class="stock-copy"><strong>{{item.name}}</strong><text>还有 {{item.quantity}} · {{item.expiryDate}}</text></view><view class="stock-meta"><text class="expiry {{item.status.tone}}">{{item.status.text}}</text><small>编辑 ›</small></view></view>
   </view>
 
-  <view class="section-head"><text>本周菜篮子</text><text>{{missingCount}} 种待采购</text></view>
-  <view wx:if="{{basketItems.length}}" class="basket-card paper-card">
-    <view class="basket-row" wx:for="{{basketItems}}" wx:key="name"><view class="basket-check {{item.tone}}">{{item.tone === 'enough' ? '✓' : item.tone === 'partial' ? '补' : '买'}}</view><view class="basket-copy"><strong>{{item.name}} · 需要 {{item.needText}}</strong><small>冰箱 {{item.stockText}} · 用于 {{item.dishText}}</small></view><text class="basket-status {{item.tone}}">{{item.missingText}}</text></view>
-  </view>
+  <view class="section-head"><text>按天准备新鲜食材</text><text>{{missingCount}} 项待采购</text></view>
+  <block wx:if="{{basketDays.length}}">
+    <view class="basket-day paper-card" wx:for="{{basketDays}}" wx:for-item="day" wx:key="value">
+      <view class="basket-day-head"><view><strong>{{day.label}}</strong><small>{{day.value}} · {{day.dishText}}</small></view><text>{{day.missingCount ? day.missingCount + ' 项要买' : '食材够用'}}</text></view>
+      <view class="basket-row" wx:for="{{day.ingredients}}" wx:for-item="ingredient" wx:key="name"><view class="basket-check {{ingredient.tone}}">{{ingredient.tone === 'enough' ? '✓' : ingredient.tone === 'partial' ? '补' : '买'}}</view><view class="basket-copy"><strong>{{ingredient.name}} · 需要 {{ingredient.needText}}</strong><small>冰箱 {{ingredient.stockText}}</small></view><view class="basket-side"><text class="basket-status {{ingredient.tone}}">{{ingredient.missingText}}</text><button wx:if="{{ingredient.tone !== 'enough'}}" data-name="{{ingredient.name}}" bindtap="copyIngredient">复制搜索</button></view></view>
+    </view>
+    <button wx:if="{{missingCount}}" class="xiaoxiang-button" bindtap="copyShoppingList"><text>象</text><view><strong>复制清单去小象</strong><small>粘贴食材名称搜索；取得官方授权后可升级直达</small></view><em>›</em></button>
+  </block>
   <view wx:else class="basket-empty paper-card">先去菜单把想吃的菜安排到这几天，食材会自动汇总到这里。</view>
 </view>
 
 <view wx:if="{{showEditor}}" class="sheet-overlay" bindtap="closeEditor">
-  <form class="bottom-sheet stock-sheet" bindsubmit="addStock" catchtap="noop">
-    <view class="sheet-head"><view><text>冰箱存货</text><strong>放进冰箱</strong></view><button class="sheet-close" bindtap="closeEditor">×</button></view>
-    <text class="field-label">食材名字</text><input class="text-input" name="name" placeholder="例如：番茄" />
-    <text class="field-label">还有多少</text><input class="text-input" name="quantity" placeholder="例如：3个 / 500克" />
+  <form class="bottom-sheet stock-sheet" bindsubmit="saveStock" catchtap="noop">
+    <view class="sheet-head"><view><text>冰箱存货</text><strong>{{editingStockId ? '编辑这份存货' : '放进冰箱'}}</strong></view><button class="sheet-close" bindtap="closeEditor">×</button></view>
+    <text class="field-label">食材名字</text><input class="text-input" name="name" value="{{stockName}}" placeholder="例如：番茄" />
+    <text class="field-label">还有多少</text><input class="text-input" name="quantity" value="{{stockQuantity}}" placeholder="例如：3个 / 500克" />
     <text class="field-label">什么时候到期</text><picker mode="date" value="{{defaultExpiry}}" bindchange="onExpiryChange"><view class="date-picker">{{defaultExpiry}}</view></picker><input hidden name="expiryDate" value="{{defaultExpiry}}" />
-    <button class="primary-button" form-type="submit">保存这份存货</button>
+    <button class="primary-button" form-type="submit">{{editingStockId ? '保存修改' : '保存这份存货'}}</button><button wx:if="{{editingStockId}}" class="delete-stock" data-id="{{editingStockId}}" bindtap="removeStock">删除这份存货</button>
   </form>
 </view>

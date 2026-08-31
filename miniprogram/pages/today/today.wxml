@@ -4,13 +4,18 @@
   <image class="menu-book" src="/assets/illustrations/menu-book.png" mode="aspectFit" />
   <view class="quick-actions"><button class="soft-button" bindtap="goMenu"><text class="quick-icon">✦</text><text>我想吃的</text></button><button class="is-active" bindtap="goHistory"><text>我烧过的</text></button></view>
 
+  <view wx:if="{{missedDishes.length}}" class="missed-card">
+    <view class="missed-head"><view><small>计划有变化也没关系</small><strong>有 {{missedDishes.length}} 道菜那天没做</strong></view><text>未扣库存</text></view>
+    <view class="missed-row" wx:for="{{missedDishes}}" wx:key="id"><view><strong>{{item.name}}</strong><small>原计划 {{item.planDate}}</small></view><button class="today" data-id="{{item.id}}" bindtap="moveMissedToToday">今天做</button><button data-id="{{item.id}}" bindtap="clearMissed">暂不做</button></view>
+  </view>
+
   <view class="section-head today-section-head"><text>今日食谱</text><text>{{dishes.length ? dishes.length + ' 道菜' : '还没安排'}}</text></view>
   <view class="today-board">
     <scroll-view wx:if="{{dishes.length}}" scroll-x enhanced show-scrollbar="{{false}}" class="today-dish-scroll">
       <view class="today-dish-row {{dishes.length <= 2 ? 'is-few' : ''}}"><view wx:for="{{dishes}}" wx:key="id" class="today-dish-card"><view class="today-dish-image dish-composite"><image class="plate-layer" src="{{item.plateImage}}" mode="aspectFit" /><image class="food-layer" src="{{item.image}}" mode="aspectFit" /></view><text>{{item.name}}</text><small>{{item.note}}</small></view></view>
     </scroll-view>
     <view wx:else class="empty-today"><text>今天还没安排菜</text><small>先去菜单挑一道想吃的</small></view>
-    <view class="today-actions"><button class="soft-button" bindtap="goMenu">帮我想道菜</button><button wx:if="{{dishes.length}}" class="primary-button" bindtap="startMeal">今天就吃这些</button></view>
+    <view class="today-actions"><button class="soft-button" bindtap="goMenu">帮我想道菜</button><button wx:if="{{dishes.length}}" class="primary-button" bindtap="startMeal">做完了，更新冰箱</button></view>
   </view>
 
   <view class="section-head tomorrow-head"><text>明日食谱</text><text>{{tomorrowDishes.length ? tomorrowDishes.length + ' 道菜' : '还没安排'}}</text></view>
