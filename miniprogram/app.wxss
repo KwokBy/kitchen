@@ -18,6 +18,7 @@ view, text, button, input, textarea, image, scroll-view, swiper, swiper-item {
 }
 
 button::after { border: 0; }
+.dish-composite .food-layer { border-radius: 50%; }
 
 .page-shell { min-height: 100vh; padding: 28rpx 36rpx 170rpx; }
 .eyebrow { display: block; color: var(--ink-soft); font-size: 20rpx; font-weight: 600; letter-spacing: 4rpx; }

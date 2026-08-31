@@ -11,6 +11,11 @@ Page({
     categoryIndex: 0,
     name: '',
     image: '/assets/dishes/dish-1.png',
+    showCropper: false,
+    cropSource: '',
+    cropImageStyle: '',
+    cropZoom: 100,
+    cropSaving: false,
     plate: 'sage',
     plateOptions: [
       { key: 'sage', label: '青瓷', image: '/assets/plates/sage.png' },
@@ -82,13 +87,170 @@ Page({
       sourceType: [source],
       success: result => {
         const src = result.tempFiles[0].tempFilePath;
-        wx.cropImage({
-          src,
-          cropScale: '1:1',
-          success: cropped => this.persistImage(cropped.tempFilePath)
-        });
+        this.openImageCropper(src);
       }
     });
+  },
+  openImageCropper(src) {
+    wx.getImageInfo({
+      src,
+      success: info => {
+        const windowWidth = wx.getWindowInfo ? wx.getWindowInfo().windowWidth : wx.getSystemInfoSync().windowWidth;
+        const cropSize = windowWidth * 560 / 750;
+        const aspect = info.width / info.height;
+        const baseWidth = aspect >= 1 ? cropSize * aspect : cropSize;
+        const baseHeight = aspect >= 1 ? cropSize : cropSize / aspect;
+        const crop = {
+          size: cropSize,
+          naturalWidth: info.width,
+          naturalHeight: info.height,
+          baseWidth,
+          baseHeight,
+          scale: 1,
+          x: (cropSize - baseWidth) / 2,
+          y: (cropSize - baseHeight) / 2,
+          stageLeft: 0,
+          stageTop: 0
+        };
+        this.cropState = crop;
+        this.setData({ showCropper: true, cropSource: src, cropSaving: false, cropZoom: 100, cropImageStyle: this.cropStyle(crop) }, () => {
+          this.createSelectorQuery().select('.crop-stage').boundingClientRect(rect => {
+            if (rect && this.cropState) {
+              this.cropState.stageLeft = rect.left;
+              this.cropState.stageTop = rect.top;
+            }
+          }).exec();
+        });
+      },
+      fail: () => wx.showToast({ title: '这张图片暂时无法读取', icon: 'none' })
+    });
+  },
+  cropStyle(crop) {
+    return `left:${crop.x}px;top:${crop.y}px;width:${crop.baseWidth * crop.scale}px;height:${crop.baseHeight * crop.scale}px;`;
+  },
+  clampCrop(crop, x, y, scale) {
+    const width = crop.baseWidth * scale;
+    const height = crop.baseHeight * scale;
+    return {
+      x: Math.min(0, Math.max(crop.size - width, x)),
+      y: Math.min(0, Math.max(crop.size - height, y))
+    };
+  },
+  cropTouchPoint(touch) {
+    return {
+      x: touch.clientX !== undefined ? touch.clientX : (touch.pageX !== undefined ? touch.pageX : touch.x),
+      y: touch.clientY !== undefined ? touch.clientY : (touch.pageY !== undefined ? touch.pageY : touch.y)
+    };
+  },
+  onCropTouchStart(event) {
+    const crop = this.cropState;
+    if (!crop) return;
+    const touches = event.touches.map(touch => this.cropTouchPoint(touch));
+    if (touches.length >= 2) {
+      const midpoint = { x: (touches[0].x + touches[1].x) / 2, y: (touches[0].y + touches[1].y) / 2 };
+      this.cropGesture = {
+        type: 'pinch',
+        distance: Math.hypot(touches[0].x - touches[1].x, touches[0].y - touches[1].y),
+        scale: crop.scale,
+        focalX: (midpoint.x - crop.stageLeft - crop.x) / (crop.baseWidth * crop.scale),
+        focalY: (midpoint.y - crop.stageTop - crop.y) / (crop.baseHeight * crop.scale)
+      };
+    } else if (touches.length === 1) {
+      this.cropGesture = { type: 'drag', point: touches[0], x: crop.x, y: crop.y };
+    }
+  },
+  onCropTouchMove(event) {
+    const crop = this.cropState;
+    const gesture = this.cropGesture;
+    if (!crop || !gesture) return;
+    const touches = event.touches.map(touch => this.cropTouchPoint(touch));
+    if (gesture.type === 'pinch' && touches.length >= 2) {
+      const distance = Math.hypot(touches[0].x - touches[1].x, touches[0].y - touches[1].y);
+      const scale = Math.min(4, Math.max(1, gesture.scale * distance / Math.max(1, gesture.distance)));
+      const midpoint = {
+        x: (touches[0].x + touches[1].x) / 2 - crop.stageLeft,
+        y: (touches[0].y + touches[1].y) / 2 - crop.stageTop
+      };
+      const position = this.clampCrop(crop, midpoint.x - gesture.focalX * crop.baseWidth * scale, midpoint.y - gesture.focalY * crop.baseHeight * scale, scale);
+      Object.assign(crop, position, { scale });
+    } else if (gesture.type === 'drag' && touches.length === 1) {
+      const position = this.clampCrop(crop, gesture.x + touches[0].x - gesture.point.x, gesture.y + touches[0].y - gesture.point.y, crop.scale);
+      Object.assign(crop, position);
+    }
+    this.setData({ cropZoom: Math.round(crop.scale * 100), cropImageStyle: this.cropStyle(crop) });
+  },
+  onCropTouchEnd(event) {
+    this.cropGesture = null;
+    if (event.touches.length === 1) this.onCropTouchStart(event);
+  },
+  closeImageCropper() {
+    if (this.data.cropSaving) return;
+    this.cropState = null;
+    this.cropGesture = null;
+    this.setData({ showCropper: false, cropSource: '' });
+  },
+  onCropZoomChange(event) {
+    const crop = this.cropState;
+    if (!crop) return;
+    const scale = Math.min(4, Math.max(1, Number(event.detail.value) / 100));
+    const center = crop.size / 2;
+    const oldWidth = crop.baseWidth * crop.scale;
+    const oldHeight = crop.baseHeight * crop.scale;
+    const focalX = (center - crop.x) / oldWidth;
+    const focalY = (center - crop.y) / oldHeight;
+    const position = this.clampCrop(crop, center - focalX * crop.baseWidth * scale, center - focalY * crop.baseHeight * scale, scale);
+    Object.assign(crop, position, { scale });
+    this.setData({ cropZoom: Math.round(scale * 100), cropImageStyle: this.cropStyle(crop) });
+  },
+  confirmImageCrop() {
+    const crop = this.cropState;
+    if (!crop || this.data.cropSaving) return;
+    this.setData({ cropSaving: true });
+    this.createSelectorQuery().select('#dishCropCanvas').fields({ node: true, size: true }).exec(result => {
+      const canvas = result[0] && result[0].node;
+      if (!canvas) return this.cropFailed();
+      const outputSize = 512;
+      canvas.width = outputSize;
+      canvas.height = outputSize;
+      const context = canvas.getContext('2d');
+      const image = canvas.createImage();
+      image.onload = () => {
+        const renderWidth = crop.baseWidth * crop.scale;
+        const renderHeight = crop.baseHeight * crop.scale;
+        const sourceX = -crop.x / renderWidth * crop.naturalWidth;
+        const sourceY = -crop.y / renderHeight * crop.naturalHeight;
+        const sourceWidth = crop.size / renderWidth * crop.naturalWidth;
+        const sourceHeight = crop.size / renderHeight * crop.naturalHeight;
+        context.clearRect(0, 0, outputSize, outputSize);
+        context.save();
+        context.beginPath();
+        context.arc(outputSize / 2, outputSize / 2, outputSize / 2, 0, Math.PI * 2);
+        context.clip();
+        context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputSize, outputSize);
+        context.restore();
+        wx.canvasToTempFilePath({
+          canvas,
+          fileType: 'png',
+          width: outputSize,
+          height: outputSize,
+          destWidth: outputSize,
+          destHeight: outputSize,
+          success: exported => {
+            this.persistImage(exported.tempFilePath);
+            this.cropState = null;
+            this.cropGesture = null;
+            this.setData({ showCropper: false, cropSource: '', cropSaving: false });
+          },
+          fail: () => this.cropFailed()
+        });
+      };
+      image.onerror = () => this.cropFailed();
+      image.src = this.data.cropSource;
+    });
+  },
+  cropFailed() {
+    this.setData({ cropSaving: false });
+    wx.showToast({ title: '裁剪失败，请换一张图片重试', icon: 'none' });
   },
   persistImage(tempFilePath) {
     wx.saveFile({

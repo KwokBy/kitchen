@@ -49,3 +49,15 @@
     <button class="primary-button save-button" form-type="submit">保存这道菜</button>
   </form>
 </view>
+
+<view wx:if="{{showCropper}}" class="cropper-overlay">
+  <view class="cropper-head"><view><text>裁切菜品照片</text><strong>把菜放进圆圈里</strong></view><button bindtap="closeImageCropper">×</button></view>
+  <view class="crop-stage" catchtouchstart="onCropTouchStart" catchtouchmove="onCropTouchMove" catchtouchend="onCropTouchEnd" catchtouchcancel="onCropTouchEnd">
+    <image class="crop-source" src="{{cropSource}}" mode="scaleToFill" style="{{cropImageStyle}}" />
+    <view class="crop-window"></view>
+  </view>
+  <text class="crop-tip">单指移动 · 双指缩放 · 圆圈内就是最终菜图</text>
+  <view class="crop-zoom"><text>缩小</text><slider min="100" max="400" value="{{cropZoom}}" activeColor="#f3edda" backgroundColor="#39403c" block-color="#f3edda" block-size="22" bindchanging="onCropZoomChange" bindchange="onCropZoomChange" /><text>放大</text></view>
+  <view class="crop-actions"><button bindtap="closeImageCropper">重新选择</button><button class="confirm" loading="{{cropSaving}}" disabled="{{cropSaving}}" bindtap="confirmImageCrop">{{cropSaving ? '正在裁切' : '使用照片'}}</button></view>
+  <canvas type="2d" id="dishCropCanvas" class="crop-canvas"></canvas>
+</view>
