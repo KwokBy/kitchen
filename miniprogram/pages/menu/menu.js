@@ -17,7 +17,7 @@ Page({
     plannedCount: 0, showArrange: false, arrangeDate: '', showPicker: false,
     pickerMode: 'all', pickerDishes: [], pickerSelectedIds: [],
     pickerDate: '', showDay: false, activeDay: { label: '', value: '', dishes: [] },
-    tableMotion: '', plateMotion: '', showAddChoice: false, addChoiceDate: '', menuTouchStartY: 0
+    tableMotion: '', plateMotion: '', showAddChoice: false, addChoiceDate: ''
   },
   onShow() {
     if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 2, hidden: false });
@@ -63,14 +63,17 @@ Page({
   },
   onMenuTouchStart(event) {
     const touch = event.touches && event.touches[0];
-    if (touch) this.setData({ menuTouchStartY: touch.clientY });
+    if (touch) this.menuTouchStart = { x: touch.clientX, y: touch.clientY };
   },
   onMenuTouchEnd(event) {
     const touch = event.changedTouches && event.changedTouches[0];
-    if (!touch || this.data.dishes.length < 2) return;
-    const distance = touch.clientY - this.data.menuTouchStartY;
-    if (Math.abs(distance) < 45) return;
-    const nextIndex = distance < 0
+    const start = this.menuTouchStart;
+    this.menuTouchStart = null;
+    if (!touch || !start || this.data.dishes.length < 2) return;
+    const distanceX = touch.clientX - start.x;
+    const distanceY = touch.clientY - start.y;
+    if (Math.abs(distanceX) < 45 || Math.abs(distanceX) <= Math.abs(distanceY) * 1.2) return;
+    const nextIndex = distanceX < 0
       ? Math.min(this.data.selectedIndex + 1, this.data.dishes.length - 1)
       : Math.max(this.data.selectedIndex - 1, 0);
     this.animateSelection(nextIndex);

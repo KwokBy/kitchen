@@ -9,7 +9,7 @@
   </view>
   <view wx:else class="empty-menu paper-card">还没有菜，先新增第一道。</view>
 
-  <view wx:if="{{selectedDish}}" class="selected-copy"><text>{{selectedDish.name}}</text><small>♥ {{selectedDish.wishText}}{{selectedDish.planDates.length ? ' · 已安排 ' + selectedDish.planDates.length + ' 天' : ''}}</small><small wx:if="{{selectedDish.note}}">{{selectedDish.note}}</small><small wx:if="{{dishes.length > 1}}" class="menu-swipe-hint">↑ 上下滑动换菜 ↓</small></view>
+  <view wx:if="{{selectedDish}}" class="selected-copy"><text>{{selectedDish.name}}</text><small>♥ {{selectedDish.wishText}}{{selectedDish.planDates.length ? ' · 已安排 ' + selectedDish.planDates.length + ' 天' : ''}}</small><small wx:if="{{selectedDish.note}}">{{selectedDish.note}}</small><small wx:if="{{dishes.length > 1}}" class="menu-swipe-hint">← 左右滑动换菜 →</small></view>
   <view class="menu-actions"><button class="soft-button add" bindtap="addDish">＋ 新增</button><button class="primary-button" bindtap="arrangeDish">安排</button><button class="soft-button" bindtap="editDish">编辑</button><button class="remove-button" bindtap="removeDish">移出</button></view>
 
   <view class="section-head"><text>这几天吃什么</text><text>她也可以来安排</text></view>
