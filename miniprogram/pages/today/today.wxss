@@ -2,17 +2,22 @@
 .brand-title { display: block; font-family: STKaiti, KaiTi, serif; font-size: 48rpx; font-weight: 700; }
 .brand-copy { display: block; margin-top: 16rpx; color: #d85d3f; font-family: STKaiti, KaiTi, serif; font-size: 24rpx; transform: rotate(-4deg); }
 .brand-illustration { width: 230rpx; height: 210rpx; border-radius: 34%; filter: saturate(.88) contrast(1.06); mix-blend-mode: multiply; }
-.today-board { overflow: hidden; padding: 24rpx; background-image: linear-gradient(rgba(53,70,55,.04) 1rpx, transparent 1rpx), linear-gradient(90deg, rgba(53,70,55,.04) 1rpx, transparent 1rpx); background-size: 44rpx 44rpx; }
-.dish-swiper { height: 350rpx; }
-.dish-slide { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 320rpx; }
-.dish-slide image { width: 220rpx; height: 220rpx; border: 16rpx solid #f5eadf; border-radius: 50%; box-shadow: 0 18rpx 34rpx rgba(48,52,45,.2); }
-.dish-slide text { margin-top: 10rpx; font-family: STKaiti, KaiTi, serif; font-size: 32rpx; font-weight: 700; }
-.dish-slide small { margin-top: 5rpx; color: #607263; font-size: 20rpx; }
+.today-section-head { margin-top: 18rpx; }
+.today-board { overflow: hidden; padding: 18rpx; background-image: linear-gradient(rgba(53,70,55,.04) 1rpx, transparent 1rpx), linear-gradient(90deg, rgba(53,70,55,.04) 1rpx, transparent 1rpx); background-size: 44rpx 44rpx; }
+.today-dish-scroll { width: 100%; white-space: nowrap; }
+.today-dish-row { display: inline-flex; min-width: 100%; gap: 12rpx; }
+.today-dish-row.is-few { justify-content: center; }
+.today-dish-card { display: inline-flex; flex: 0 0 210rpx; flex-direction: column; align-items: center; min-width: 210rpx; padding: 10rpx 8rpx 12rpx; border-radius: 25rpx; background: rgba(255,255,255,.38); }
+.today-dish-card image { width: 108rpx; height: 108rpx; border: 9rpx solid #f5eadf; border-radius: 50%; box-shadow: 0 10rpx 20rpx rgba(48,52,45,.15); }
+.today-dish-card text, .today-dish-card small { display: block; max-width: 150rpx; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.today-dish-card text { margin-top: 8rpx; font-family: STKaiti, KaiTi, serif; font-size: 24rpx; font-weight: 700; }
+.today-dish-card small { margin-top: 2rpx; color: #607263; font-size: 17rpx; }
 .empty-today { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 260rpx; }
 .empty-today text { font-family: STKaiti, KaiTi, serif; font-size: 32rpx; }
 .empty-today small { margin-top: 12rpx; color: #607263; font-size: 22rpx; }
-.today-actions { display: flex; margin-top: 18rpx; }
-.today-actions button { flex: 1; margin: 0 8rpx; }
+.today-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12rpx; margin-top: 14rpx; }
+.today-actions button { width: 100%; min-width: 0; min-height: 72rpx; margin: 0; padding: 0 10rpx; font-size: 23rpx; }
+.today-actions button:only-child { grid-column: 1 / 3; }
 .history-row { width: 100%; white-space: nowrap; }
 .history-item { display: inline-flex; flex-direction: column; align-items: center; width: 132rpx; margin-right: 18rpx; }
 .history-item image { width: 104rpx; height: 104rpx; border: 10rpx solid rgba(255,255,255,.7); border-radius: 50%; }

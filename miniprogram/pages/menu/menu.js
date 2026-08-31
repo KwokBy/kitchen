@@ -13,7 +13,8 @@ Page({
     dishes: [], selectedIndex: 0, selectedDish: null, weekDays: [], dateOptions: [],
     plannedCount: 0, showArrange: false, arrangeDate: '', showPicker: false,
     pickerMode: 'all', pickerDishes: [], pickerIndex: 0, pickerDish: null,
-    pickerDate: '', showDay: false, activeDay: { label: '', value: '', dishes: [] }
+    pickerDate: '', showDay: false, activeDay: { label: '', value: '', dishes: [] },
+    tableMotion: '', plateMotion: ''
   },
   onShow() {
     this.refresh();
@@ -34,8 +35,20 @@ Page({
   },
   selectDish(event) {
     const selectedIndex = Number(event.currentTarget.dataset.index);
-    this.setData({ selectedIndex, selectedDish: this.data.dishes[selectedIndex] });
+    if (selectedIndex === this.data.selectedIndex) return;
+    const direction = selectedIndex > this.data.selectedIndex ? 'forward' : 'backward';
+    clearTimeout(this.menuMotionTimer);
+    this.setData({ tableMotion: '', plateMotion: '' }, () => {
+      this.setData({
+        selectedIndex,
+        selectedDish: this.data.dishes[selectedIndex],
+        tableMotion: `table-spin-${direction}`,
+        plateMotion: `plate-enter-${direction}`
+      });
+      this.menuMotionTimer = setTimeout(() => this.setData({ tableMotion: '', plateMotion: '' }), 520);
+    });
   },
+  onUnload() { clearTimeout(this.menuMotionTimer); },
   addDish() { wx.navigateTo({ url: '/pages/dish-edit/dish-edit' }); },
   editDish() { if (this.data.selectedDish) wx.navigateTo({ url: `/pages/dish-edit/dish-edit?id=${this.data.selectedDish.id}` }); },
   arrangeDish() {

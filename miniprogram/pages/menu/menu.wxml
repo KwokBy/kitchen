@@ -5,7 +5,7 @@
     <scroll-view scroll-y class="dish-name-list">
       <text wx:for="{{dishes}}" wx:key="id" class="dish-name {{index === selectedIndex ? 'is-active' : ''}}" data-index="{{index}}" bindtap="selectDish">{{item.name}}</text>
     </scroll-view>
-    <view class="round-table"><view class="selected-plate plate-{{selectedDish.plate}}"><image src="{{selectedDish.image}}" mode="aspectFill" /></view></view>
+    <view class="round-table {{tableMotion}}"><view class="selected-plate plate-{{selectedDish.plate}} {{plateMotion}}"><image src="{{selectedDish.image}}" mode="aspectFill" /></view></view>
   </view>
   <view wx:else class="empty-menu paper-card">还没有菜，先新增第一道。</view>
 
