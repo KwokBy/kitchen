@@ -83,6 +83,6 @@
 .day-dish-row strong, .day-dish-row small { display: block; }
 .day-dish-row strong { font-family: STKaiti, KaiTi, serif; font-size: 26rpx; }
 .day-dish-row small { margin-top: 4rpx; color: #607263; font-size: 18rpx; }
-.day-dish-row button { width: 100%; min-width: 0; min-height: 56rpx; margin: 0; padding: 0 8rpx; border-radius: 999rpx; color: #243b2e; background: rgba(36,59,46,.08); font-size: 19rpx; }
+.day-dish-row button { display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; height: 56rpx; min-height: 56rpx; margin: 0; padding: 0 8rpx; border-radius: 999rpx; color: #243b2e; background: rgba(36,59,46,.08); font-size: 19rpx; line-height: 1.1; }
 .day-dish-row button.unschedule { color: #d85d3f; background: rgba(216,93,63,.08); }
 .day-add { margin-top: 18rpx; }

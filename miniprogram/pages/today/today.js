@@ -2,6 +2,7 @@ const { loadState, updateState } = require('../../services/store');
 const { formatDate, addDays } = require('../../utils/date');
 const { consumeInventory } = require('../../utils/ingredients');
 const { planDatesOf, isPlannedOn, addPlanDate, removePlanDate } = require('../../utils/schedule');
+const notificationsService = require('../../services/notifications');
 
 function withPlate(dish) {
   const plate = dish.plate || 'sage';
@@ -9,7 +10,7 @@ function withPlate(dish) {
 }
 
 Page({
-  data: { dishes: [], tomorrowDishes: [], missedDishes: [], todayDate: '', tomorrowDate: '', history: [], dateText: '' },
+  data: { dishes: [], tomorrowDishes: [], missedDishes: [], todayDate: '', tomorrowDate: '', history: [], dateText: '', notifications: [], unreadCount: 0, showNotifications: false, canRemindPicker: false, pickerRoleName: '点菜主力' },
   onShow() {
     if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 0 });
     const state = loadState();
@@ -27,8 +28,45 @@ Page({
       todayDate: today,
       tomorrowDate,
       history: state.history.slice(0, 4).map(item => ({ ...item, dish: state.dishes.find(dish => dish.id === item.dishId) })).filter(item => item.dish).map(item => ({ ...item, dish: withPlate(item.dish) })),
-      dateText: new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date())
+      dateText: new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date()),
+      canRemindPicker: !!state.kitchen && state.kitchen.role === 'owner' && state.kitchen.memberCount >= 2,
+      pickerRoleName: state.kitchen && state.kitchen.memberRoleName ? state.kitchen.memberRoleName : '点菜主力'
     });
+    this.refreshNotifications();
+  },
+  async refreshNotifications() {
+    try {
+      const response = await notificationsService.list();
+      const notifications = response.notifications.map(item => {
+        const dateText = item.date ? item.date.slice(5).replace('-', '/') : '';
+        return {
+          ...item,
+          title: item.kind === 'menu_ready' ? `${item.senderNickname || '搭档'}点好菜单了` : `${item.senderNickname || '搭档'}提醒你来点菜`,
+          body: item.kind === 'menu_ready' ? `${dateText} · ${item.dishNames.join('、')}` : `打开菜单，挑几道想吃的吧`,
+          timeText: item.createdAt ? item.createdAt.slice(5, 16).replace('T', ' ') : ''
+        };
+      });
+      this.setData({ notifications, unreadCount: response.unreadCount });
+    } catch (_) {}
+  },
+  setTabHidden(hidden) { if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ hidden }); },
+  async openNotifications() {
+    this.setTabHidden(true);
+    this.setData({ showNotifications: true });
+    if (this.data.unreadCount) {
+      try { await notificationsService.markAllRead(); this.setData({ unreadCount: 0, notifications: this.data.notifications.map(item => ({ ...item, isRead: true })) }); } catch (_) {}
+    }
+  },
+  closeNotifications() { this.setTabHidden(false); this.setData({ showNotifications: false }); },
+  noop() {},
+  onUnload() { this.setTabHidden(false); },
+  async remindPicker() {
+    try {
+      await notificationsService.remindPicker();
+      wx.showToast({ title: `已提醒${this.data.pickerRoleName}`, icon: 'success' });
+    } catch (error) {
+      wx.showToast({ title: error.message || '提醒发送失败', icon: 'none' });
+    }
   },
   goMenu() {
     getApp().globalData.openWishPicker = true;

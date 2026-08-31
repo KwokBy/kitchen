@@ -1,8 +1,9 @@
 <view class="page-shell today-page">
-  <text class="eyebrow">{{dateText}}</text>
+  <view class="today-top"><text class="eyebrow">{{dateText}}</text><button class="notification-entry" bindtap="openNotifications">消息<text wx:if="{{unreadCount}}">{{unreadCount > 9 ? '9+' : unreadCount}}</text></button></view>
   <view wx:if="{{dishes.length}}" class="meal-notice">已为今日食谱安排 {{dishes.length}} 道菜</view>
   <image class="menu-book" src="/assets/illustrations/menu-book.png" mode="aspectFit" />
   <view class="quick-actions"><button class="soft-button" bindtap="goMenu"><text class="quick-icon">✦</text><text>我想吃的</text></button><button class="is-active" bindtap="goHistory"><text>我烧过的</text></button></view>
+  <button wx:if="{{canRemindPicker}}" class="picker-reminder" bindtap="remindPicker"><text>还没想好吃什么？</text><strong>提醒{{pickerRoleName}}来点菜 →</strong></button>
 
   <view wx:if="{{missedDishes.length}}" class="missed-card">
     <view class="missed-head"><view><small>计划有变化也没关系</small><strong>有 {{missedDishes.length}} 道菜那天没做</strong></view><text>未扣库存</text></view>
@@ -27,3 +28,5 @@
     <view wx:if="{{!history.length}}" class="history-empty">吃完第一顿，它会出现在这里。</view>
   </scroll-view>
 </view>
+
+<view wx:if="{{showNotifications}}" class="sheet-overlay" bindtap="closeNotifications"><view class="bottom-sheet notification-sheet" catchtap="noop"><view class="sheet-head"><view><text>厨房消息</text><strong>我们之间的小纸条</strong></view><button class="sheet-close" bindtap="closeNotifications">×</button></view><view wx:for="{{notifications}}" wx:key="id" class="notification-item {{item.isRead ? '' : 'is-unread'}}"><view class="notification-dot"></view><view><strong>{{item.title}}</strong><text>{{item.body}}</text><small>{{item.timeText}}</small></view></view><view wx:if="{{!notifications.length}}" class="notification-empty"><strong>还没有消息</strong><text>点好菜单或提醒点菜后，消息会出现在这里。</text></view></view></view>

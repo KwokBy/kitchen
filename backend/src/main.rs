@@ -9,7 +9,7 @@ use axum::{
     routing::{get, post, put},
 };
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
-use chrono::{Duration, Utc};
+use chrono::{DateTime, Duration, NaiveDate, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool, postgres::PgPoolOptions};
@@ -183,6 +183,45 @@ struct UpdateProfileRequest {
     avatar_content_type: Option<String>,
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CreateNotificationRequest {
+    kind: String,
+    date: Option<String>,
+    #[serde(default)]
+    dish_names: Vec<String>,
+}
+
+#[derive(FromRow)]
+struct NotificationRow {
+    id: Uuid,
+    kind: String,
+    plan_date: Option<NaiveDate>,
+    dish_names: Vec<String>,
+    sender_nickname: String,
+    read_at: Option<DateTime<Utc>>,
+    created_at: DateTime<Utc>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NotificationView {
+    id: Uuid,
+    kind: String,
+    date: Option<NaiveDate>,
+    dish_names: Vec<String>,
+    sender_nickname: String,
+    is_read: bool,
+    created_at: DateTime<Utc>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NotificationsResponse {
+    notifications: Vec<NotificationView>,
+    unread_count: usize,
+}
+
 #[derive(Serialize)]
 struct KitchenResponse {
     kitchen: KitchenView,
@@ -243,6 +282,11 @@ async fn main() {
                 .put(update_kitchen_settings),
         )
         .route("/v1/kitchens/join", post(join_kitchen))
+        .route(
+            "/v1/notifications",
+            get(list_notifications).post(create_notification),
+        )
+        .route("/v1/notifications/read", put(read_notifications))
         .route("/v1/users/me/profile", put(update_profile))
         .route("/v1/users/{user_id}/avatar", get(user_avatar))
         .with_state(state);
@@ -559,6 +603,146 @@ async fn load_members(pool: &PgPool, kitchen_id: Uuid) -> Result<Vec<MemberView>
             },
         })
         .collect())
+}
+
+async fn list_notifications(
+    State(state): State<AppState>,
+    AuthenticatedUser(user_id): AuthenticatedUser,
+) -> Result<Json<NotificationsResponse>, ApiError> {
+    let rows = sqlx::query_as::<_, NotificationRow>(
+        "SELECT n.id, n.kind, n.plan_date, n.dish_names, u.nickname AS sender_nickname, \
+         n.read_at, n.created_at \
+         FROM kitchen_notifications n JOIN users u ON u.id = n.sender_user_id \
+         WHERE n.recipient_user_id = $1 ORDER BY n.created_at DESC LIMIT 30",
+    )
+    .bind(user_id)
+    .fetch_all(&state.pool)
+    .await
+    .map_err(internal)?;
+    let unread_count = rows.iter().filter(|row| row.read_at.is_none()).count();
+    let notifications = rows
+        .into_iter()
+        .map(|row| NotificationView {
+            id: row.id,
+            kind: row.kind,
+            date: row.plan_date,
+            dish_names: row.dish_names,
+            sender_nickname: row.sender_nickname,
+            is_read: row.read_at.is_some(),
+            created_at: row.created_at,
+        })
+        .collect();
+    Ok(Json(NotificationsResponse {
+        notifications,
+        unread_count,
+    }))
+}
+
+async fn create_notification(
+    State(state): State<AppState>,
+    AuthenticatedUser(user_id): AuthenticatedUser,
+    body: Result<Json<CreateNotificationRequest>, JsonRejection>,
+) -> Result<Json<NotificationView>, ApiError> {
+    let Json(body) = body.map_err(invalid_json)?;
+    let membership = sqlx::query_as::<_, (Uuid, String)>(
+        "SELECT kitchen_id, role FROM kitchen_members WHERE user_id = $1",
+    )
+    .bind(user_id)
+    .fetch_optional(&state.pool)
+    .await
+    .map_err(internal)?
+    .ok_or_else(|| ApiError::BadRequest("请先加入厨房".to_owned()))?;
+    let target_role = match (body.kind.as_str(), membership.1.as_str()) {
+        ("menu_ready", "member") => "owner",
+        ("pick_reminder", "owner") => "member",
+        ("menu_ready", _) => {
+            return Err(ApiError::BadRequest(
+                "你就是做饭主力，无需通知自己".to_owned(),
+            ));
+        }
+        ("pick_reminder", _) => {
+            return Err(ApiError::Forbidden("只有做饭主力可以提醒点菜".to_owned()));
+        }
+        _ => return Err(ApiError::BadRequest("通知类型无效".to_owned())),
+    };
+    let recipient_user_id = sqlx::query_scalar::<_, Uuid>(
+        "SELECT user_id FROM kitchen_members WHERE kitchen_id = $1 AND role = $2",
+    )
+    .bind(membership.0)
+    .bind(target_role)
+    .fetch_optional(&state.pool)
+    .await
+    .map_err(internal)?
+    .ok_or_else(|| ApiError::BadRequest("厨房里的另一位成员还没有加入".to_owned()))?;
+    let plan_date = match body.date {
+        Some(value) => Some(
+            NaiveDate::parse_from_str(value.trim(), "%Y-%m-%d")
+                .map_err(|_| ApiError::BadRequest("菜单日期格式无效".to_owned()))?,
+        ),
+        None => None,
+    };
+    let dish_names: Vec<String> = body
+        .dish_names
+        .into_iter()
+        .map(|name| name.trim().to_owned())
+        .filter(|name| !name.is_empty())
+        .collect();
+    if body.kind == "menu_ready"
+        && (plan_date.is_none()
+            || dish_names.is_empty()
+            || dish_names.len() > 20
+            || dish_names.iter().any(|name| name.chars().count() > 40))
+    {
+        return Err(ApiError::BadRequest(
+            "点菜通知需要日期和 1 到 20 道菜".to_owned(),
+        ));
+    }
+    let notification_id = Uuid::new_v4();
+    let row = sqlx::query_as::<_, NotificationRow>(
+        "WITH inserted AS ( \
+           INSERT INTO kitchen_notifications \
+             (id, kitchen_id, sender_user_id, recipient_user_id, kind, plan_date, dish_names) \
+           VALUES ($1, $2, $3, $4, $5, $6, $7) \
+           RETURNING * \
+         ) \
+         SELECT inserted.id, inserted.kind, inserted.plan_date, inserted.dish_names, \
+           users.nickname AS sender_nickname, inserted.read_at, inserted.created_at \
+         FROM inserted JOIN users ON users.id = inserted.sender_user_id",
+    )
+    .bind(notification_id)
+    .bind(membership.0)
+    .bind(user_id)
+    .bind(recipient_user_id)
+    .bind(&body.kind)
+    .bind(plan_date)
+    .bind(&dish_names)
+    .fetch_one(&state.pool)
+    .await
+    .map_err(internal)?;
+    Ok(Json(NotificationView {
+        id: row.id,
+        kind: row.kind,
+        date: row.plan_date,
+        dish_names: row.dish_names,
+        sender_nickname: row.sender_nickname,
+        is_read: false,
+        created_at: row.created_at,
+    }))
+}
+
+async fn read_notifications(
+    State(state): State<AppState>,
+    AuthenticatedUser(user_id): AuthenticatedUser,
+) -> Result<StatusCode, ApiError> {
+    sqlx::query(
+        "UPDATE kitchen_notifications SET read_at = now() \
+         WHERE recipient_user_id = $1 AND read_at IS NULL",
+    )
+    .bind(user_id)
+    .execute(&state.pool)
+    .await
+    .map_err(internal)?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
 async fn update_profile(

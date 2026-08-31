@@ -18,6 +18,7 @@ view, text, button, input, textarea, image, scroll-view, swiper, swiper-item {
 }
 
 button::after { border: 0; }
+.dish-composite .plate-layer { clip-path: circle(45% at 50% 50%); }
 .dish-composite .food-layer { border-radius: 50%; }
 
 .page-shell { min-height: 100vh; padding: 28rpx 36rpx 170rpx; }

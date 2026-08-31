@@ -1,6 +1,7 @@
 const { loadState, updateState } = require('../../services/store');
 const { dateChoices } = require('../../utils/date');
 const { planDatesOf, isPlannedOn, addPlanDate, removePlanDate } = require('../../utils/schedule');
+const notifications = require('../../services/notifications');
 
 function withWishText(dish) {
   const me = dish.wantedBy.includes('me');
@@ -98,11 +99,16 @@ Page({
     this.setData({ showArrange: true, arrangeDate: this.data.dateOptions[0].value });
   },
   chooseArrangeDate(event) { this.setData({ arrangeDate: event.currentTarget.dataset.date }); },
-  confirmArrange() {
+  async confirmArrange() {
     const selectedDish = this.data.selectedDish;
     updateState(state => { const dish = state.dishes.find(item => item.id === selectedDish.id); if (dish) addPlanDate(dish, this.data.arrangeDate); });
     const label = this.data.dateOptions.find(item => item.value === this.data.arrangeDate).label;
-    this.closeSheets(); this.refresh(); wx.showToast({ title: `已安排${label}`, icon: 'success' });
+    this.closeSheets(); this.refresh();
+    let notified = false;
+    if (loadState().kitchen && loadState().kitchen.role === 'member') {
+      try { await notifications.sendMenuReady(this.data.arrangeDate, [selectedDish.name]); notified = true; } catch (_) {}
+    }
+    wx.showToast({ title: notified ? `已安排${label}并通知` : `已安排${label}`, icon: 'success' });
   },
   openPicker() {
     const pickerDate = this.data.dateOptions[0] ? this.data.dateOptions[0].value : '';
@@ -126,12 +132,18 @@ Page({
     this.setData({ pickerSelectedIds, pickerDishes: this.data.pickerDishes.map(dish => ({ ...dish, isSelected: selected.has(dish.id) })) });
   },
   choosePickerDate(event) { this.setData({ pickerDate: event.currentTarget.dataset.date }); },
-  confirmPicker() {
+  async confirmPicker() {
     const selectedIds = new Set(this.data.pickerSelectedIds);
     if (!selectedIds.size) return;
+    const selectedDishes = this.data.dishes.filter(dish => selectedIds.has(dish.id));
     updateState(state => state.dishes.forEach(dish => { if (selectedIds.has(dish.id)) addPlanDate(dish, this.data.pickerDate); }));
     const count = selectedIds.size;
-    this.closeSheets(); this.refresh(); wx.showToast({ title: `已安排${count}道菜`, icon: 'success' });
+    this.closeSheets(); this.refresh();
+    let notified = false;
+    if (loadState().kitchen && loadState().kitchen.role === 'member') {
+      try { await notifications.sendMenuReady(this.data.pickerDate, selectedDishes.map(dish => dish.name)); notified = true; } catch (_) {}
+    }
+    wx.showToast({ title: notified ? `已安排${count}道并通知` : `已安排${count}道菜`, icon: 'success' });
   },
   openDay(event) { this.setTabHidden(true); this.setData({ showDay: true, activeDay: this.data.weekDays.find(item => item.value === event.currentTarget.dataset.date) }); },
   editDayDish(event) { this.closeSheets(); wx.navigateTo({ url: `/pages/dish-edit/dish-edit?id=${event.currentTarget.dataset.id}` }); },

@@ -21,7 +21,11 @@ function loadState() {
     });
     changed = true;
   }
-  saved.version = 3;
+  if ((saved.version || 1) < 4) {
+    saved.dishes.forEach(dish => { dish.planDates = []; });
+    changed = true;
+  }
+  saved.version = 4;
   if (changed) wx.setStorageSync(STORAGE_KEY, saved);
   return saved;
 }
