@@ -2,7 +2,7 @@
   <text class="eyebrow">{{dateText}}</text>
   <view wx:if="{{dishes.length}}" class="meal-notice">已为今日食谱安排 {{dishes.length}} 道菜</view>
   <image class="menu-book" src="/assets/illustrations/menu-book.png" mode="aspectFit" />
-  <view class="quick-actions"><button class="soft-button" bindtap="goMenu">✦ 我想吃的</button><button class="is-active" bindtap="goHistory">♨ 我烧过的</button></view>
+  <view class="quick-actions"><button class="soft-button" bindtap="goMenu"><text class="quick-icon">✦</text><text>我想吃的</text></button><button class="is-active" bindtap="goHistory"><text>我烧过的</text></button></view>
 
   <view class="section-head today-section-head"><text>今日食谱</text><text>{{dishes.length ? dishes.length + ' 道菜' : '还没安排'}}</text></view>
   <view class="today-board">

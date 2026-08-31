@@ -13,7 +13,7 @@ Page({
   data: {
     dishes: [], selectedIndex: 0, selectedDish: null, weekDays: [], dateOptions: [],
     plannedCount: 0, showArrange: false, arrangeDate: '', showPicker: false,
-    pickerMode: 'all', pickerDishes: [], pickerIndex: 0, pickerDish: null,
+    pickerMode: 'all', pickerDishes: [], pickerSelectedIds: [],
     pickerDate: '', showDay: false, activeDay: { label: '', value: '', dishes: [] },
     tableMotion: '', plateMotion: '', showAddChoice: false, addChoiceDate: ''
   },
@@ -61,7 +61,7 @@ Page({
   addDish() { this.setTabHidden(true); this.setData({ showAddChoice: true, addChoiceDate: '' }); },
   chooseExistingDish() {
     const pickerDate = this.data.addChoiceDate || (this.data.dateOptions[0] && this.data.dateOptions[0].value) || '';
-    this.setData({ showAddChoice: false, showPicker: true, pickerDate });
+    this.setData({ showAddChoice: false, showPicker: true, pickerDate, pickerSelectedIds: [] });
     this.updatePicker('all');
   },
   createNewDish() {
@@ -85,25 +85,31 @@ Page({
   openPicker() {
     const pickerDate = this.data.dateOptions[0] ? this.data.dateOptions[0].value : '';
     this.setTabHidden(true);
-    this.setData({ showPicker: true, pickerDate }); this.updatePicker('all');
+    this.setData({ showPicker: true, pickerDate, pickerSelectedIds: [] }); this.updatePicker('all');
   },
   changePickerMode(event) { this.updatePicker(event.currentTarget.dataset.mode); },
   updatePicker(pickerMode) {
     let pickerDishes = this.data.dishes;
     if (pickerMode === 'me') pickerDishes = pickerDishes.filter(dish => dish.wantedBy.includes('me'));
     if (pickerMode === 'both') pickerDishes = pickerDishes.filter(dish => dish.wantedBy.includes('me') && dish.wantedBy.includes('partner'));
-    this.setData({ pickerMode, pickerDishes, pickerIndex: 0, pickerDish: pickerDishes[0] || null });
+    const selected = new Set(this.data.pickerSelectedIds);
+    this.setData({ pickerMode, pickerDishes: pickerDishes.map(dish => ({ ...dish, isSelected: selected.has(dish.id) })) });
   },
   selectPickerDish(event) {
-    const pickerIndex = Number(event.currentTarget.dataset.index);
-    this.setData({ pickerIndex, pickerDish: this.data.pickerDishes[pickerIndex] });
+    const dishId = event.currentTarget.dataset.id;
+    const pickerSelectedIds = this.data.pickerSelectedIds.includes(dishId)
+      ? this.data.pickerSelectedIds.filter(id => id !== dishId)
+      : [...this.data.pickerSelectedIds, dishId];
+    const selected = new Set(pickerSelectedIds);
+    this.setData({ pickerSelectedIds, pickerDishes: this.data.pickerDishes.map(dish => ({ ...dish, isSelected: selected.has(dish.id) })) });
   },
   choosePickerDate(event) { this.setData({ pickerDate: event.currentTarget.dataset.date }); },
   confirmPicker() {
-    if (!this.data.pickerDish) return;
-    updateState(state => { const dish = state.dishes.find(item => item.id === this.data.pickerDish.id); if (dish) dish.planDate = this.data.pickerDate; });
-    const name = this.data.pickerDish.name;
-    this.closeSheets(); this.refresh(); wx.showToast({ title: `${name}已安排`, icon: 'success' });
+    const selectedIds = new Set(this.data.pickerSelectedIds);
+    if (!selectedIds.size) return;
+    updateState(state => state.dishes.forEach(dish => { if (selectedIds.has(dish.id)) dish.planDate = this.data.pickerDate; }));
+    const count = selectedIds.size;
+    this.closeSheets(); this.refresh(); wx.showToast({ title: `已安排${count}道菜`, icon: 'success' });
   },
   openDay(event) { this.setTabHidden(true); this.setData({ showDay: true, activeDay: this.data.weekDays.find(item => item.value === event.currentTarget.dataset.date) }); },
   editDayDish(event) { this.closeSheets(); wx.navigateTo({ url: `/pages/dish-edit/dish-edit?id=${event.currentTarget.dataset.id}` }); },
