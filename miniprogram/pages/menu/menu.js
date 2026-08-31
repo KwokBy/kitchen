@@ -5,14 +5,14 @@ function withWishText(dish) {
   const me = dish.wantedBy.includes('me');
   const partner = dish.wantedBy.includes('partner');
   const wishText = me && partner ? '我和她都想吃' : me ? '我想吃' : '她想吃';
-  return { ...dish, wishText };
+  return { ...dish, plate: dish.plate || 'sage', wishText };
 }
 
 Page({
   data: {
     dishes: [], selectedIndex: 0, selectedDish: null, weekDays: [], dateOptions: [],
     plannedCount: 0, showArrange: false, arrangeDate: '', showPicker: false,
-    pickerMode: 'both', pickerDishes: [], pickerIndex: 0, pickerDish: null,
+    pickerMode: 'all', pickerDishes: [], pickerIndex: 0, pickerDish: null,
     pickerDate: '', showDay: false, activeDay: { label: '', value: '', dishes: [] }
   },
   onShow() {
@@ -51,7 +51,7 @@ Page({
   },
   openPicker() {
     const pickerDate = this.data.dateOptions[0] ? this.data.dateOptions[0].value : '';
-    this.setData({ showPicker: true, pickerDate }); this.updatePicker('both');
+    this.setData({ showPicker: true, pickerDate }); this.updatePicker('all');
   },
   changePickerMode(event) { this.updatePicker(event.currentTarget.dataset.mode); },
   updatePicker(pickerMode) {
@@ -60,10 +60,8 @@ Page({
     if (pickerMode === 'both') pickerDishes = pickerDishes.filter(dish => dish.wantedBy.includes('me') && dish.wantedBy.includes('partner'));
     this.setData({ pickerMode, pickerDishes, pickerIndex: 0, pickerDish: pickerDishes[0] || null });
   },
-  stepPicker(event) {
-    if (!this.data.pickerDishes.length) return;
-    const step = Number(event.currentTarget.dataset.step);
-    const pickerIndex = (this.data.pickerIndex + step + this.data.pickerDishes.length) % this.data.pickerDishes.length;
+  selectPickerDish(event) {
+    const pickerIndex = Number(event.currentTarget.dataset.index);
     this.setData({ pickerIndex, pickerDish: this.data.pickerDishes[pickerIndex] });
   },
   choosePickerDate(event) { this.setData({ pickerDate: event.currentTarget.dataset.date }); },

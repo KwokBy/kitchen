@@ -1,7 +1,20 @@
 .editor-page { padding-bottom: 90rpx; }
-.dish-preview { display: flex; flex-direction: column; align-items: center; margin: 26rpx 0 16rpx; color: #607263; font-size: 21rpx; }
-.preview-table { display: flex; align-items: center; justify-content: center; width: 380rpx; height: 380rpx; margin-bottom: 16rpx; border-radius: 50%; background: repeating-linear-gradient(0deg, transparent 0 29rpx, rgba(68,96,65,.3) 29rpx 58rpx), repeating-linear-gradient(90deg, rgba(176,91,64,.34) 0 29rpx, rgba(245,239,215,.5) 29rpx 58rpx); box-shadow: inset 0 0 0 12rpx rgba(255,255,255,.22), 0 20rpx 40rpx rgba(55,60,50,.14); }
-.preview-table image { width: 230rpx; height: 230rpx; border: 15rpx solid rgba(251,247,235,.94); border-radius: 50%; box-shadow: 0 20rpx 34rpx rgba(48,52,45,.25); }
+.dish-photo-editor { margin: 26rpx 0 18rpx; padding: 24rpx; border-radius: 34rpx; background: rgba(255,255,255,.36); }
+.photo-label { margin-top: 0; }
+.photo-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; }
+.photo-actions > view { display: flex; align-items: center; justify-content: center; min-height: 82rpx; border: 1rpx solid rgba(53,70,55,.1); border-radius: 999rpx; background: rgba(255,255,255,.74); color: #405848; font-size: 24rpx; box-shadow: 0 10rpx 24rpx rgba(57,67,55,.06); }
+.dish-preview { display: flex; flex-direction: column; align-items: center; margin: 28rpx 0 20rpx; color: #607263; font-size: 20rpx; }
+.preview-plate { display: flex; align-items: center; justify-content: center; width: 286rpx; height: 286rpx; margin-bottom: 16rpx; border-radius: 50%; box-shadow: 0 22rpx 38rpx rgba(48,52,45,.2); }
+.preview-plate image { width: 224rpx; height: 224rpx; border-radius: 50%; }
+.plate-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12rpx; }
+.plate-option { display: flex; flex-direction: column; align-items: center; padding: 10rpx 4rpx 8rpx; border: 2rpx solid transparent; border-radius: 24rpx; color: #607263; }
+.plate-option.is-active { border-color: #78907c; background: rgba(120,144,124,.12); color: #243b2e; }
+.plate-swatch { width: 76rpx; height: 76rpx; border-radius: 50%; }
+.plate-option small { margin-top: 8rpx; font-size: 18rpx; }
+.plate-sage { border: 12rpx solid #819584; background: rgba(255,255,255,.88); }
+.plate-cream { border: 12rpx solid #ded2b8; background: rgba(255,255,255,.9); }
+.plate-pink { border: 12rpx dotted #dfa59a; background: rgba(255,255,255,.9); }
+.plate-blue { border: 12rpx double #cbdad2; background: rgba(255,255,255,.92); }
 .picker-field { display: flex; align-items: center; justify-content: space-between; height: 88rpx; padding: 0 28rpx; border: 1rpx solid rgba(53,70,55,.08); border-radius: 999rpx; background: rgba(255,255,255,.72); }
 .wanted-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16rpx; }
 .wanted-card { display: flex; align-items: center; gap: 18rpx; padding: 20rpx; border: 2rpx solid transparent; border-radius: 28rpx; background: rgba(255,255,255,.55); }

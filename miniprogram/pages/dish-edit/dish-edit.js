@@ -9,6 +9,13 @@ Page({
     categoryIndex: 0,
     name: '',
     image: '/assets/dishes/dish-1.png',
+    plate: 'sage',
+    plateOptions: [
+      { key: 'sage', label: '青瓷' },
+      { key: 'cream', label: '米釉' },
+      { key: 'pink', label: '花点' },
+      { key: 'blue', label: '云边' }
+    ],
     wantedBy: ['partner'],
     meWanted: false,
     partnerWanted: true,
@@ -28,6 +35,7 @@ Page({
       categoryIndex,
       name: dish ? dish.name : '',
       image: dish ? dish.image : '/assets/dishes/dish-1.png',
+      plate: dish && dish.plate ? dish.plate : 'sage',
       wantedBy: dish ? dish.wantedBy : ['partner'],
       meWanted: dish ? dish.wantedBy.includes('me') : false,
       partnerWanted: dish ? dish.wantedBy.includes('partner') : true,
@@ -48,12 +56,28 @@ Page({
       : [...this.data.wantedBy, person];
     this.setData({ wantedBy, meWanted: wantedBy.includes('me'), partnerWanted: wantedBy.includes('partner') });
   },
-  chooseImage() {
+  selectPlate(event) { this.setData({ plate: event.currentTarget.dataset.plate }); },
+  chooseImage(event) {
+    const source = event.currentTarget.dataset.source;
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
-      sourceType: ['album', 'camera'],
-      success: result => this.setData({ image: result.tempFiles[0].tempFilePath })
+      sourceType: [source],
+      success: result => {
+        const src = result.tempFiles[0].tempFilePath;
+        wx.cropImage({
+          src,
+          cropScale: '1:1',
+          success: cropped => this.persistImage(cropped.tempFilePath)
+        });
+      }
+    });
+  },
+  persistImage(tempFilePath) {
+    wx.saveFile({
+      tempFilePath,
+      success: result => this.setData({ image: result.savedFilePath }),
+      fail: () => this.setData({ image: tempFilePath })
     });
   },
   saveDish(event) {
@@ -67,6 +91,7 @@ Page({
       category: this.data.categories[this.data.categoryIndex],
       wantedBy: this.data.wantedBy,
       image: this.data.image,
+      plate: this.data.plate,
       note: values.note.trim(),
       planDate: this.data.planDate,
       ingredients: values.ingredients.split('\n').map(item => item.trim()).filter(Boolean)
