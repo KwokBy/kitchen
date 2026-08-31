@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:17-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: xiguifei_kitchen
       POSTGRES_USER: postgres
@@ -15,15 +16,37 @@ services:
 
   api:
     build: ./backend
+    restart: unless-stopped
     env_file: ./backend/.env
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/xiguifei_kitchen
       LISTEN_ADDR: 0.0.0.0:8787
     ports:
-      - "8787:8787"
+      - "127.0.0.1:8787:8787"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=compose_default"
+      - "traefik.http.middlewares.kitchen-api-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.kitchen-api-https.redirectscheme.permanent=true"
+      - "traefik.http.routers.kitchen-api-http.rule=Host(`glup.top`)"
+      - "traefik.http.routers.kitchen-api-http.entrypoints=web"
+      - "traefik.http.routers.kitchen-api-http.middlewares=kitchen-api-https"
+      - "traefik.http.routers.kitchen-api-https.rule=Host(`glup.top`)"
+      - "traefik.http.routers.kitchen-api-https.entrypoints=websecure"
+      - "traefik.http.routers.kitchen-api-https.tls=true"
+      - "traefik.http.routers.kitchen-api-https.tls.certresolver=myresolver"
+      - "traefik.http.services.kitchen-api.loadbalancer.server.port=8787"
+    networks:
+      - default
+      - proxy
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   kitchen-postgres:
+
+networks:
+  proxy:
+    external: true
+    name: compose_default

@@ -31,7 +31,7 @@
 .join-row button { width: 140rpx; margin: 0; padding: 0; }
 .join-row button, .category-add button { border-radius: 999rpx; color: white; background: #78907c; }
 .settings-card { margin-top: 22rpx; padding: 28rpx; }
-.settings-title { font-family: STKaiti, KaiTi, serif; font-size: 32rpx; font-weight: 700; }
+.settings-title { display: block; font-family: STKaiti, KaiTi, serif; font-size: 32rpx; font-weight: 700; }
 .pair-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14rpx; }
 .settings-card > .primary-button { margin-top: 28rpx; }
 .category-list { display: flex; flex-wrap: wrap; gap: 12rpx; }

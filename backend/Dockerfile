@@ -3,7 +3,7 @@ WORKDIR /app
 COPY Cargo.toml Cargo.lock* ./
 COPY src ./src
 COPY migrations ./migrations
-RUN cargo build --release
+RUN cargo build --release -j 1
 
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
