@@ -130,4 +130,14 @@ async function joinKitchen(code) {
   });
 }
 
-module.exports = { bindIdentity, createKitchen, joinKitchen, syncMyProfile, refreshKitchen, normalizeKitchen };
+async function updateKitchenSettings(settings) {
+  if (getApp().globalData.backendMode === 'rust') {
+    const response = await request('/v1/kitchens', { method: 'PUT', data: settings });
+    return updateState(state => { state.kitchen = normalizeKitchen(response.kitchen); });
+  }
+  return updateState(state => {
+    state.kitchen = { ...state.kitchen, ...settings };
+  });
+}
+
+module.exports = { bindIdentity, createKitchen, joinKitchen, updateKitchenSettings, syncMyProfile, refreshKitchen, normalizeKitchen };

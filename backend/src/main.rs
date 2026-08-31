@@ -32,6 +32,8 @@ enum ApiError {
     #[error("请先登录")]
     Unauthorized,
     #[error("{0}")]
+    Forbidden(String),
+    #[error("{0}")]
     NotFound(String),
     #[error("{0}")]
     Conflict(String),
@@ -44,6 +46,7 @@ impl IntoResponse for ApiError {
         let status = match self {
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
             Self::Unauthorized => StatusCode::UNAUTHORIZED,
+            Self::Forbidden(_) => StatusCode::FORBIDDEN,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::Conflict(_) => StatusCode::CONFLICT,
             Self::Internal => StatusCode::INTERNAL_SERVER_ERROR,
@@ -123,11 +126,21 @@ struct JoinKitchenRequest {
     invite_code: String,
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateKitchenSettingsRequest {
+    name: String,
+    owner_role_name: String,
+    member_role_name: String,
+}
+
 #[derive(FromRow)]
 struct KitchenRow {
     id: Uuid,
     name: String,
     invite_code: String,
+    owner_role_name: String,
+    member_role_name: String,
     role: String,
     member_count: i64,
 }
@@ -138,6 +151,8 @@ struct KitchenView {
     id: Uuid,
     name: String,
     invite_code: String,
+    owner_role_name: String,
+    member_role_name: String,
     role: String,
     member_count: i64,
     members: Vec<MemberView>,
@@ -184,6 +199,8 @@ impl KitchenView {
             id: row.id,
             name: row.name,
             invite_code: row.invite_code.trim().to_owned(),
+            owner_role_name: row.owner_role_name,
+            member_role_name: row.member_role_name,
             role: row.role,
             member_count: row.member_count,
             members,
@@ -219,7 +236,12 @@ async fn main() {
     let app = Router::new()
         .route("/healthz", get(healthz))
         .route("/v1/auth/wechat", post(wechat_login))
-        .route("/v1/kitchens", get(current_kitchen).post(create_kitchen))
+        .route(
+            "/v1/kitchens",
+            get(current_kitchen)
+                .post(create_kitchen)
+                .put(update_kitchen_settings),
+        )
         .route("/v1/kitchens/join", post(join_kitchen))
         .route("/v1/users/me/profile", put(update_profile))
         .route("/v1/users/{user_id}/avatar", get(user_avatar))
@@ -356,6 +378,8 @@ async fn create_kitchen(
             id: kitchen_id,
             name: name.to_owned(),
             invite_code,
+            owner_role_name: "做饭主力".to_owned(),
+            member_role_name: "点菜主力".to_owned(),
             role: "owner".to_owned(),
             member_count: 1,
             members,
@@ -368,7 +392,7 @@ async fn current_kitchen(
     AuthenticatedUser(user_id): AuthenticatedUser,
 ) -> Result<Json<OptionalKitchenResponse>, ApiError> {
     let row = sqlx::query_as::<_, KitchenRow>(
-        "SELECT k.id, k.name, k.invite_code, km.role, COUNT(all_members.user_id) AS member_count \
+        "SELECT k.id, k.name, k.invite_code, k.owner_role_name, k.member_role_name, km.role, COUNT(all_members.user_id) AS member_count \
          FROM kitchens k \
          JOIN kitchen_members km ON km.kitchen_id = k.id AND km.user_id = $1 \
          JOIN kitchen_members all_members ON all_members.kitchen_id = k.id \
@@ -440,7 +464,7 @@ async fn join_kitchen(
     .await
     .map_err(internal)?;
     let row = sqlx::query_as::<_, KitchenRow>(
-        "SELECT k.id, k.name, k.invite_code, km.role, COUNT(all_members.user_id) AS member_count \
+        "SELECT k.id, k.name, k.invite_code, k.owner_role_name, k.member_role_name, km.role, COUNT(all_members.user_id) AS member_count \
          FROM kitchens k \
          JOIN kitchen_members km ON km.kitchen_id = k.id AND km.user_id = $2 \
          JOIN kitchen_members all_members ON all_members.kitchen_id = k.id \
@@ -452,6 +476,59 @@ async fn join_kitchen(
     .await
     .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
+    let members = load_members(&state.pool, kitchen_id).await?;
+    Ok(Json(KitchenResponse {
+        kitchen: KitchenView::from_row(row, members),
+    }))
+}
+
+async fn update_kitchen_settings(
+    State(state): State<AppState>,
+    AuthenticatedUser(user_id): AuthenticatedUser,
+    body: Result<Json<UpdateKitchenSettingsRequest>, JsonRejection>,
+) -> Result<Json<KitchenResponse>, ApiError> {
+    let Json(body) = body.map_err(invalid_json)?;
+    let name = body.name.trim();
+    let owner_role_name = body.owner_role_name.trim();
+    let member_role_name = body.member_role_name.trim();
+    if name.is_empty() || name.chars().count() > 40 {
+        return Err(ApiError::BadRequest(
+            "厨房名称需要是 1 到 40 个字".to_owned(),
+        ));
+    }
+    if owner_role_name.is_empty()
+        || owner_role_name.chars().count() > 20
+        || member_role_name.is_empty()
+        || member_role_name.chars().count() > 20
+    {
+        return Err(ApiError::BadRequest(
+            "身份称呼需要是 1 到 20 个字".to_owned(),
+        ));
+    }
+    let kitchen_id = sqlx::query_scalar::<_, Uuid>(
+        "UPDATE kitchens SET name = $2, owner_role_name = $3, member_role_name = $4 \
+         WHERE owner_user_id = $1 RETURNING id",
+    )
+    .bind(user_id)
+    .bind(name)
+    .bind(owner_role_name)
+    .bind(member_role_name)
+    .fetch_optional(&state.pool)
+    .await
+    .map_err(internal)?
+    .ok_or_else(|| ApiError::Forbidden("只有厨房创建者可以修改共享设置".to_owned()))?;
+    let row = sqlx::query_as::<_, KitchenRow>(
+        "SELECT k.id, k.name, k.invite_code, k.owner_role_name, k.member_role_name, km.role, COUNT(all_members.user_id) AS member_count \
+         FROM kitchens k \
+         JOIN kitchen_members km ON km.kitchen_id = k.id AND km.user_id = $2 \
+         JOIN kitchen_members all_members ON all_members.kitchen_id = k.id \
+         WHERE k.id = $1 GROUP BY k.id, km.role",
+    )
+    .bind(kitchen_id)
+    .bind(user_id)
+    .fetch_one(&state.pool)
+    .await
+    .map_err(internal)?;
     let members = load_members(&state.pool, kitchen_id).await?;
     Ok(Json(KitchenResponse {
         kitchen: KitchenView::from_row(row, members),

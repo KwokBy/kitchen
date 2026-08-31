@@ -2,7 +2,7 @@ const { loadState, updateState } = require('../../services/store');
 const kitchenService = require('../../services/kitchen');
 
 Page({
-  data: { state: {}, members: [], activeTab: 'kitchen', showCreate: false, joinCode: '', showWechatProfile: false, draftAvatarUrl: '', draftNickname: '' },
+  data: { state: {}, members: [], isKitchenOwner: false, activeTab: 'kitchen', showCreate: false, joinCode: '', showWechatProfile: false, draftAvatarUrl: '', draftNickname: '' },
   onLoad(options) { if (options.invite) this.setData({ joinCode: options.invite.toUpperCase(), activeTab: 'kitchen' }); },
   onShow() {
     if (this.getTabBar && this.getTabBar()) this.getTabBar().setData({ selected: 3 });
@@ -27,10 +27,10 @@ Page({
         nickname,
         avatarUrl: member.avatarUrl || (isMe && state.identity.profileComplete ? state.identity.avatarUrl : ''),
         initial: nickname.charAt(0) || (member.role === 'owner' ? '主' : '伴'),
-        roleText: member.role === 'owner' ? '做饭主力' : '点菜主力'
+        roleText: member.role === 'owner' ? (kitchen.ownerRoleName || '做饭主力') : (kitchen.memberRoleName || '点菜主力')
       };
     });
-    this.setData({ state, members });
+    this.setData({ state, members, isKitchenOwner: !!kitchen && kitchen.role === 'owner' });
   },
   async syncKitchen() {
     if (!this.data.state.identity || !this.data.state.identity.bound) return;
@@ -125,13 +125,22 @@ Page({
     catch (error) { wx.showToast({ title: error.message || '邀请码无效或已过期', icon: 'none' }); }
   },
   copyInvite() { wx.setClipboardData({ data: this.data.state.kitchen.inviteCode }); },
-  saveProfile(event) {
+  async saveKitchenSettings(event) {
     const values = event.detail.value;
-    updateState(state => {
-      state.profile = { ...state.profile, ...values };
-      if (state.kitchen && values.homeName) state.kitchen.name = values.homeName;
-    });
-    this.refresh(); wx.showToast({ title: '厨房设置已保存', icon: 'success' });
+    const settings = {
+      name: values.name.trim(),
+      ownerRoleName: values.ownerRoleName.trim(),
+      memberRoleName: values.memberRoleName.trim()
+    };
+    if (!settings.name) return wx.showToast({ title: '厨房名称不能为空', icon: 'none' });
+    if (!settings.ownerRoleName || !settings.memberRoleName) return wx.showToast({ title: '身份称呼不能为空', icon: 'none' });
+    try {
+      await kitchenService.updateKitchenSettings(settings);
+      this.refresh();
+      wx.showToast({ title: '厨房设置已同步', icon: 'success' });
+    } catch (error) {
+      wx.showToast({ title: error.message || '保存失败，请稍后重试', icon: 'none' });
+    }
   },
   addCategory(event) {
     const category = event.detail.value.category.trim();

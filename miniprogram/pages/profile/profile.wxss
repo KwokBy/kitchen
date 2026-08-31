@@ -62,6 +62,11 @@ button.account-action.login { color: #fff; border-color: #243b2e; background: #2
 .settings-title { display: block; font-family: STKaiti, KaiTi, serif; font-size: 32rpx; font-weight: 700; }
 .settings-hint { display: block; margin-top: 6rpx; color: #607263; font-size: 19rpx; }
 .settings-card > .primary-button { margin-top: 28rpx; }
+.settings-member { display: grid; grid-template-columns: 70rpx minmax(0, 1fr) auto; align-items: center; gap: 14rpx; margin-top: 16rpx; padding-top: 16rpx; border-top: 1rpx solid rgba(53,70,55,.09); }
+.settings-member .member-avatar, .settings-member .member-avatar image { width: 64rpx; height: 64rpx; }
+.readonly-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 18rpx; margin-top: 18rpx; padding: 18rpx 20rpx; border-radius: 20rpx; background: rgba(120,144,124,.08); }
+.readonly-row text { color: #607263; font-size: 20rpx; }
+.readonly-row strong { font-family: STKaiti, KaiTi, serif; font-size: 24rpx; }
 .category-list { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 20rpx; }
 .category-list view { padding: 14rpx 14rpx 14rpx 22rpx; border-radius: 999rpx; background: rgba(255,255,255,.7); font-size: 22rpx; }
 .category-list text { margin-left: 10rpx; color: #607263; }
