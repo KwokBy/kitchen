@@ -18,6 +18,29 @@ function readFileBase64(filePath) {
   return new Promise((resolve, reject) => wx.getFileSystemManager().readFile({ filePath, encoding: 'base64', success: result => resolve(result.data), fail: reject }));
 }
 
+function downloadFile(url) {
+  return new Promise((resolve, reject) => wx.downloadFile({
+    url,
+    success: result => result.statusCode === 200 ? resolve(result.tempFilePath) : reject(new Error(`头像下载失败（${result.statusCode}）`)),
+    fail: reject
+  }));
+}
+
+function compressAvatar(filePath) {
+  return new Promise(resolve => wx.compressImage({
+    src: filePath,
+    quality: 76,
+    compressedWidth: 512,
+    success: result => resolve(result.tempFilePath),
+    fail: () => resolve(filePath)
+  }));
+}
+
+async function readAvatarBase64(avatarUrl) {
+  const filePath = /^https?:\/\//.test(avatarUrl) ? await downloadFile(avatarUrl) : avatarUrl;
+  return readFileBase64(await compressAvatar(filePath));
+}
+
 function imageContentType(base64) {
   if (base64.startsWith('iVBOR')) return 'image/png';
   if (base64.startsWith('UklGR')) return 'image/webp';
@@ -29,13 +52,15 @@ async function syncMyProfile() {
   const state = loadState();
   const identity = state.identity;
   if (!identity.bound || !identity.profileComplete) return;
-  const signature = `${identity.nickname}\n${identity.avatarUrl}`;
+  const signature = `v2:${identity.nickname}\n${identity.avatarUrl}`;
   if (identity.remoteProfileSignature === signature) return;
   let avatarData;
-  let avatarReady = !identity.avatarUrl || /^https?:\/\//.test(identity.avatarUrl);
-  if (identity.avatarUrl && !/^https?:\/\//.test(identity.avatarUrl)) {
+  let avatarReady = !identity.avatarUrl;
+  const ownAvatarPrefix = `${getApp().globalData.apiBaseUrl}/v1/users/`;
+  if (identity.avatarUrl.startsWith(ownAvatarPrefix)) avatarReady = true;
+  else if (identity.avatarUrl) {
     try {
-      avatarData = await readFileBase64(identity.avatarUrl);
+      avatarData = await readAvatarBase64(identity.avatarUrl);
       avatarReady = true;
     } catch (_) {}
   }
@@ -46,7 +71,7 @@ async function syncMyProfile() {
       ...(avatarData ? { avatarData, avatarContentType: imageContentType(avatarData) } : {})
     }
   });
-  updateState(next => { next.identity.remoteProfileSignature = avatarReady ? signature : `${identity.nickname}\n`; });
+  updateState(next => { next.identity.remoteProfileSignature = avatarReady ? signature : `v2:${identity.nickname}\n`; });
 }
 
 async function refreshKitchen() {
