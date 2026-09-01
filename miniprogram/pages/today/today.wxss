@@ -17,6 +17,8 @@
 .picker-reminder .reminder-arrow, .wechat-subscribe > text { flex: 0 0 auto; margin-left: 16rpx; font-size: 18rpx; white-space: nowrap; }
 .wechat-subscribe { margin-top: 10rpx; color: #fff; background: #405f4c; }
 .wechat-subscribe view text { color: rgba(255,255,255,.7); }
+.wechat-subscribe.is-setup { color: #405848; background: rgba(64,95,76,.09); }
+.wechat-subscribe.is-setup view text { color: #718175; }
 .missed-card { margin-top: 18rpx; padding: 20rpx 22rpx; border: 2rpx solid rgba(216,93,63,.16); border-radius: 30rpx; background: rgba(216,93,63,.06); }
 .missed-head { display: flex; align-items: center; justify-content: space-between; }
 .missed-head small, .missed-head strong { display: block; }
